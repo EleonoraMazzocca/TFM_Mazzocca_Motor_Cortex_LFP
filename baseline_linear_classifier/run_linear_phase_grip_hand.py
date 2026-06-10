@@ -32,8 +32,10 @@ from transformer_encoder.joint_embedding_data import (
 )
 
 SCRIPT_DIR = Path(__file__).resolve().parent
+# Reverse mappings: integer ID -> human-readable label (for confusion matrix axes, etc.)
 ID_TO_GRIP = {v: k for k, v in GRIP_TO_ID.items()}
 ID_TO_HAND = {v: k for k, v in HAND_TO_ID.items()}
+# Label names for each classification head, ordered by integer ID
 HEAD_NAMES = {
     "phase": PHASE_NAMES,
     "grip": [ID_TO_GRIP[i] for i in range(len(ID_TO_GRIP))],
@@ -68,6 +70,10 @@ def _train_test_split_maybe_stratified(
     random_state: int,
     stratify: np.ndarray | None,
 ) -> tuple[np.ndarray, np.ndarray]:
+    # stratify ensures train/test splits preserve the original class proportions
+    # (e.g. same ratio of phase×grip×hand×angle combinations in both sets).
+    # Falls back to unstratified if any class has < 2 samples, since sklearn
+    # requires at least 2 samples per class to perform stratified splitting.
     if stratify is not None:
         _, counts = np.unique(stratify, return_counts=True)
         if len(counts) == 0 or counts.min() < 2:
@@ -88,7 +94,13 @@ def heldout_split_indices(
     heldout_hand: int,
     seed: int,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Split data so one specific phase/grip/hand combo is held out entirely.
+
+    Returns (train, val, seen_test, heldout_test) index arrays.
+    The held-out combo never appears in training, enabling zero-shot evaluation.
+    """
     all_idx = np.arange(len(flat["y_phase"]))
+    # Identify samples matching the held-out combination
     heldout_mask = (
         (flat["y_phase"] == heldout_phase)
         & (flat["y_grip"] == heldout_grip)
@@ -99,12 +111,15 @@ def heldout_split_indices(
     if len(heldout_idx) < 2:
         raise ValueError("Held-out phase/grip/hand combination has fewer than two samples.")
 
+    # Composite stratification key: encode all labels into a single int so
+    # train/test splits preserve the joint distribution of phase×grip×hand×angle.
     strat_remaining = (
         flat["y_phase"][remaining_idx].astype(np.int64) * 16
         + flat["y_grip"][remaining_idx].astype(np.int64) * 8
         + flat["y_hand"][remaining_idx].astype(np.int64) * 4
         + flat["y_angle"][remaining_idx].astype(np.int64)
     )
+    # 80% train, 20% temp (temp will be split into val + seen_test)
     train_idx, temp_idx = _train_test_split_maybe_stratified(
         remaining_idx,
         test_size=0.2,
@@ -117,23 +132,23 @@ def heldout_split_indices(
         + flat["y_hand"][temp_idx].astype(np.int64) * 4
         + flat["y_angle"][temp_idx].astype(np.int64)
     )
+    # Split temp 50/50 into val and seen_test
     seen_val_idx, seen_test_idx = _train_test_split_maybe_stratified(
         temp_idx,
         test_size=0.5,
         random_state=seed,
         stratify=strat_temp,
     )
-    held_val_idx, held_test_idx = train_test_split(
-        heldout_idx,
-        test_size=0.5,
-        random_state=seed,
-        shuffle=True,
-    )
-    val_idx = np.concatenate([seen_val_idx, held_val_idx])
+    # Strict zero-shot protocol: held-out samples must not influence training,
+    # validation, early stopping, or hyperparameter/model selection.
+    # The entire held-out combination is reserved for final evaluation only.
+    val_idx = seen_val_idx
+    held_test_idx = heldout_idx
     return np.sort(train_idx), np.sort(val_idx), np.sort(seen_test_idx), np.sort(held_test_idx)
 
 
 def normal_split_indices(flat: dict, seed: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Standard stratified 80/10/10 train/val/test split (no held-out combo)."""
     idx = np.arange(len(flat["y_grip"]))
     strat = (
         flat["y_phase"].astype(np.int64) * 32
@@ -163,16 +178,24 @@ def normal_split_indices(flat: dict, seed: int) -> tuple[np.ndarray, np.ndarray,
 
 
 def flatten_features(features: np.ndarray, train_idx: np.ndarray) -> tuple[np.ndarray, dict[str, np.ndarray]]:
-    """Flatten channel-token features and standardize from training samples only."""
+    """Flatten channel-token features into a 2-D matrix and z-score normalize.
+
+    Only valid channels (CHANNEL_VALID mask) are kept. Normalization stats
+    (mean, std) are computed from training samples only to prevent data leakage.
+    Zero-valued features (invalid/padding) are preserved as zeros after normalization.
+    """
     valid = CHANNEL_VALID.reshape(-1)
+    # Reshape to (n_samples, n_channels, n_features) then keep only valid channels
     x = np.asarray(features, dtype=np.float32).reshape(len(features), -1, features.shape[-1])
     x = x[:, valid, :].reshape(len(features), -1)
 
+    # Compute normalization stats from training set only (prevents data leakage)
     train_x = x[train_idx]
     mu = train_x.mean(axis=0, keepdims=True)
     sigma = train_x.std(axis=0, keepdims=True)
-    sigma = np.where(sigma < 1e-8, 1.0, sigma)
+    sigma = np.where(sigma < 1e-8, 1.0, sigma)  # avoid division by zero
 
+    # Z-score normalize, but preserve zeros (padding/invalid channels)
     zero_mask = x == 0.0
     x = (x - mu) / sigma
     x[zero_mask] = 0.0
@@ -187,19 +210,26 @@ def choose_best_model(
     c_values: Sequence[float],
     max_iter: int,
 ) -> tuple[float, LogisticRegression, float]:
+    """Grid search over regularization strengths C, select best by val macro-F1.
+
+    C controls the inverse regularization strength: smaller C = more
+    regularization (simpler model), larger C = less regularization.
+    Returns (best_C, best_model, best_val_f1).
+    """
     best_c = float(c_values[0])
     best_model: LogisticRegression | None = None
     best_f1 = -np.inf
     for c in c_values:
         model = LogisticRegression(
             C=float(c),
-            penalty="l2",
-            solver="lbfgs",
+            penalty="l2",       # L2 ridge regularization
+            solver="lbfgs",     # good default for multiclass + L2
             max_iter=max_iter,
             n_jobs=None,
         )
         model.fit(x_train, y_train)
         pred = model.predict(x_val)
+        # Macro F1: unweighted mean of per-class F1 (treats all classes equally)
         score = f1_score(y_val, pred, average="macro", zero_division=0)
         print(f"    C={float(c):g} val_macro_f1={score:.4f}")
         if score > best_f1:
@@ -213,6 +243,7 @@ def choose_best_model(
 
 
 def evaluate(model: LogisticRegression, x: np.ndarray, y: np.ndarray, labels: list[str]) -> dict:
+    """Compute accuracy, macro-F1, and confusion matrix for a given split."""
     pred = model.predict(x)
     return {
         "accuracy": float(accuracy_score(y, pred)),
@@ -222,6 +253,8 @@ def evaluate(model: LogisticRegression, x: np.ndarray, y: np.ndarray, labels: li
 
 
 def save_confusion_plot(path: Path, matrix: list[list[int]], labels: list[str], title: str) -> None:
+    """Save a confusion matrix heatmap with raw counts and normalized values."""
+    # Row-normalize so each cell shows the proportion within its true class
     mat = np.asarray(matrix, dtype=np.int64)
     row_sums = mat.sum(axis=1, keepdims=True).astype(np.float64)
     norm = np.divide(mat, row_sums, out=np.zeros_like(mat, dtype=np.float64), where=row_sums != 0)
@@ -255,11 +288,13 @@ def main(argv: Sequence[str] | None = None) -> None:
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
+    # --- 1. Load and preprocess data ---
     print(f"Loading {args.input_mode} class files from {args.data_dir}")
     trials = load_joint_trials(Path(args.data_dir), args.input_mode)
-    flat = phase_expand(trials)
+    flat = phase_expand(trials)        # expand each trial into per-phase samples
     features = extract_and_cache_features(flat, Path(args.cache_dir))
 
+    # --- 2. Train/val/test split ---
     if args.heldout:
         train_idx, val_idx, seen_test_idx, heldout_test_idx = heldout_split_indices(
             flat,
@@ -278,9 +313,11 @@ def main(argv: Sequence[str] | None = None) -> None:
         f"heldout_test={0 if heldout_test_idx is None else len(heldout_test_idx)}"
     )
 
+    # --- 3. Feature extraction & normalization ---
     x, stats = flatten_features(features, train_idx)
     print(f"Feature matrix: {x.shape} ({args.input_mode}, valid channel tokens only)")
 
+    # Label arrays for each classification head
     targets = {
         "phase": flat["y_phase"],
         "grip": flat["y_grip"],
@@ -301,6 +338,11 @@ def main(argv: Sequence[str] | None = None) -> None:
             "heldout_phase": args.heldout_phase,
             "heldout_grip": args.heldout_grip,
             "heldout_hand": args.heldout_hand,
+            "split_protocol": "strict_zero_shot" if args.heldout else "standard_stratified",
+            "split_note": (
+                "held-out phase/grip/hand samples are excluded from train and val; "
+                "they are used only for final heldout_test evaluation"
+            ) if args.heldout else "no held-out combination requested",
             "seed": int(args.seed),
             "c_values": [float(v) for v in args.c_values],
             "max_iter": int(args.max_iter),
@@ -309,6 +351,7 @@ def main(argv: Sequence[str] | None = None) -> None:
         "heads": {},
     }
 
+    # --- 4. Train and evaluate one logistic regression per head ---
     for head, y in targets.items():
         print(f"\nHead: {head}")
         labels = HEAD_NAMES[head]
@@ -344,6 +387,7 @@ def main(argv: Sequence[str] | None = None) -> None:
         save_json(out_dir / f"{head}_results.json", head_results)
         all_results["heads"][head] = head_results
 
+    # --- 5. Save normalization stats and combined results ---
     np.savez_compressed(
         out_dir / "normalization_stats.npz",
         mu=stats["mu"],

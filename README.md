@@ -421,6 +421,17 @@ Feature extraction supports:
 - `mu`: mean absolute amplitude per channel, arranged as `4 areas x 96 channel slots x 1 band`
 - `broadband6`: six band-amplitude features, arranged as `4 areas x 96 channel slots x 6 bands`
 
+Held-out experiments use a strict zero-shot split:
+
+```text
+train:        seen phase/grip/hand combinations only
+validation:   seen phase/grip/hand combinations only
+seen_test:    seen phase/grip/hand combinations only
+heldout_test: all samples from the held-out phase/grip/hand combination
+```
+
+Held-out samples are not used for early stopping, hyperparameter selection, or model selection. Summaries from new runs record this as `split_protocol: strict_zero_shot`.
+
 ## cVAE
 
 The generation experiments live in `cvae/`, including embedding-space cVAE, MMD/cVAE diagnostics, latent ablation, and evaluation scripts.

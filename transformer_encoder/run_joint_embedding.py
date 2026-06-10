@@ -178,13 +178,11 @@ def _heldout_split_indices(
         random_state=seed,
         stratify=strat_temp,
     )
-    held_val_idx, held_test_idx = train_test_split(
-        heldout_idx,
-        test_size=0.5,
-        random_state=seed,
-        shuffle=True,
-    )
-    val_idx = np.concatenate([seen_val_idx, held_val_idx])
+    # Strict zero-shot protocol: held-out samples must not influence training,
+    # validation, early stopping, or hyperparameter/model selection.
+    # The entire held-out combination is reserved for final evaluation only.
+    val_idx = seen_val_idx
+    held_test_idx = heldout_idx
     return np.sort(train_idx), np.sort(val_idx), np.sort(seen_test_idx), np.sort(held_test_idx)
 
 
@@ -1082,6 +1080,11 @@ def main(argv: list[str] | None = None) -> None:
     summary = {
         "input_mode": args.input_mode,
         "n_samples": int(len(flat["y_phase"])),
+        "split_protocol": "strict_zero_shot" if args.heldout else "standard_stratified",
+        "split_note": (
+            "held-out phase/grip/hand samples are excluded from train and val; "
+            "they are used only for final heldout_test evaluation"
+        ) if args.heldout else "no held-out combination requested",
         "splits": {
             "train": int(len(train_idx)),
             "val": int(len(val_idx)),
