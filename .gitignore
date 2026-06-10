@@ -10,3 +10,10 @@
 
 # OS
 .DS_Store
+
+# Local data, outputs, and Python caches
+data/
+outputs/
+results/
+__pycache__/
+*.pyc
