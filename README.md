@@ -410,7 +410,35 @@ The JSON contains entries for train/validation/test splits. Each entry records t
 
 ## Transformer Encoder
 
-The current transformer code lives in `transformer_encoder/`. `run_joint_embedding.py` trains a joint encoder to predict:
+The current transformer code lives in `transformer_encoder/`. The only transformer file you normally execute is `run_joint_embedding.py`; the other files are imported helpers.
+
+Execution sequence:
+
+```text
+1. Make sure class files exist in data/classes/
+   - MU files:        *_mua_200_500.npy
+   - broadband files: *_degrees.npy
+
+2. Train the joint transformer:
+   python -m transformer_encoder.run_joint_embedding ...
+
+3. Use the transformer outputs downstream:
+   - checkpoint.pt for cvae/run_embedding_cvae.py
+   - seen_embeddings.npz and heldout_embeddings.npz for optional evaluation
+   - summary.json and confusion matrices for reporting
+```
+
+Main transformer files:
+
+```text
+transformer_encoder/run_joint_embedding.py   executable training/evaluation script
+transformer_encoder/joint_embedding_data.py  loads class files, phase-expands trials, extracts/cache features
+transformer_encoder/joint_embedding_model.py neural network architecture
+transformer_encoder/attention.py             attention layer that stores attention weights for diagnostics
+transformer_encoder/data.py                  compatibility re-export of shared constants
+```
+
+`run_joint_embedding.py` trains a joint encoder to predict:
 
 - phase
 - grip
@@ -431,6 +459,36 @@ heldout_test: all samples from the held-out phase/grip/hand combination
 ```
 
 Held-out samples are not used for early stopping, hyperparameter selection, or model selection. Summaries from new runs record this as `split_protocol: strict_zero_shot`.
+
+Example MU run:
+
+```bash
+python -m transformer_encoder.run_joint_embedding \
+  --data_dir data/classes \
+  --input_mode mu \
+  --heldout \
+  --heldout_phase grasp \
+  --heldout_grip precision \
+  --heldout_hand right \
+  --skip_permutation \
+  --out_dir outputs/mu/transformer_heldout_grasp_precision_right
+```
+
+Example six-band run:
+
+```bash
+python -m transformer_encoder.run_joint_embedding \
+  --data_dir data/classes \
+  --input_mode broadband6 \
+  --heldout \
+  --heldout_phase grasp \
+  --heldout_grip precision \
+  --heldout_hand right \
+  --skip_permutation \
+  --out_dir outputs/broadband6/transformer_heldout_grasp_precision_right
+```
+
+Use `--skip_permutation` while iterating. Remove it only when you want the slower shuffled-label sanity check.
 
 ## cVAE
 

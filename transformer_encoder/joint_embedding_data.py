@@ -1,8 +1,12 @@
-"""Data utilities for joint phase/grip/hand embedding experiments.
+"""Data utilities for joint phase/grip/hand transformer experiments.
 
-The joint transformer uses the same token layout for MU and broadband6:
-4 areas x 96 channel slots = 384 tokens.  MU has one feature per token;
-broadband6 has six band-amplitude features per token.
+This module is imported by the transformer, linear baseline, and embedding cVAE.
+It handles the non-model part of the pipeline: finding class files, turning each
+trial into three phase-level samples, extracting channel-token features, caching
+those features, and wrapping them as PyTorch datasets.
+
+The shared token layout is 4 brain areas x 96 channel slots. Smaller areas are
+zero-padded and masked later by the model.
 """
 from __future__ import annotations
 
@@ -90,7 +94,11 @@ _FILTERS_6 = _filters()
 
 
 def load_joint_trials(data_dir: Path | str, input_mode: str) -> dict:
-    """Load class-file indices. Returned trials are not phase-expanded yet."""
+    """Scan unimanual class files and build a trial-level index.
+
+    The class arrays themselves stay on disk through mmap; this function stores
+    file/trial indices and labels only. Phase is not expanded yet.
+    """
     if input_mode not in INPUT_MODES:
         raise ValueError(f"input_mode must be one of {INPUT_MODES}, got {input_mode!r}")
     data_dir = Path(data_dir)
@@ -138,6 +146,7 @@ def load_joint_trials(data_dir: Path | str, input_mode: str) -> dict:
 
 
 def phase_expand(data: dict) -> dict:
+    """Convert one trial with three phases into three phase-level samples."""
     n = len(data["y_grip"])
     phase = np.tile(np.arange(len(PHASE_NAMES), dtype=np.int64), n)
     repeat = np.repeat(np.arange(n, dtype=np.int64), len(PHASE_NAMES))
@@ -176,6 +185,7 @@ def _cache_path(cache_dir: Path, data: dict, input_mode: str) -> Path:
 
 
 def extract_mu_feature(sample: np.ndarray, phase_idx: int) -> np.ndarray:
+    """Mean absolute MU amplitude per channel, arranged as (4, 96, 1)."""
     phase_data = sample[phase_idx].astype(np.float32, copy=False)
     amp = np.mean(np.abs(phase_data), axis=1)
     out = np.zeros((N_AREAS, MAX_AREA_CHANNELS, 1), dtype=np.float32)
@@ -185,6 +195,7 @@ def extract_mu_feature(sample: np.ndarray, phase_idx: int) -> np.ndarray:
 
 
 def extract_broadband6_feature(sample: np.ndarray, phase_idx: int) -> np.ndarray:
+    """Six band-amplitude features per channel, arranged as (4, 96, 6)."""
     phase_data = sample[phase_idx].astype(np.float32, copy=False)
     out = np.zeros((N_AREAS, MAX_AREA_CHANNELS, len(BAND_DEFINITIONS_6)), dtype=np.float32)
     band_amp = np.empty((phase_data.shape[0], len(BAND_DEFINITIONS_6)), dtype=np.float32)
@@ -197,6 +208,7 @@ def extract_broadband6_feature(sample: np.ndarray, phase_idx: int) -> np.ndarray
 
 
 def extract_and_cache_features(flat_data: dict, cache_dir: Path | str) -> np.ndarray:
+    """Extract features once and reuse them through a manifest-based cache."""
     cache_dir = Path(cache_dir)
     cache_dir.mkdir(parents=True, exist_ok=True)
     path = _cache_path(cache_dir, flat_data, flat_data["input_mode"])
@@ -250,6 +262,7 @@ def compute_norm_stats(features: np.ndarray, train_idx: np.ndarray) -> dict[str,
 
 
 class JointEmbeddingDataset(Dataset):
+    """PyTorch dataset that returns normalized features and the three labels."""
     def __init__(
         self,
         features: np.ndarray,
@@ -279,6 +292,7 @@ class JointEmbeddingDataset(Dataset):
 
 
 class PermutedJointDataset(Dataset):
+    """Dataset wrapper used by the permutation test to shuffle labels only."""
     def __init__(self, base: JointEmbeddingDataset, rng: np.random.Generator):
         self.base = base
         self.y_phase = torch.from_numpy(rng.permutation(base.y_phase.numpy()).copy())

@@ -1,4 +1,10 @@
-"""Joint phase/grip/hand channel-token transformer."""
+"""Neural network for the joint phase/grip/hand transformer.
+
+The model treats each channel slot as a token. It projects MU or broadband-band
+features into a shared embedding space, runs self-attention across channel
+tokens, pools non-padding tokens, and feeds the pooled embedding into three
+classification heads.
+"""
 from __future__ import annotations
 
 import torch
@@ -53,6 +59,7 @@ class JointFactorTransformer(nn.Module):
         self.register_buffer("n_valid", (~torch.tensor(PADDING_MASK, dtype=torch.bool)).float().sum())
 
     def extract_embedding(self, x: torch.Tensor) -> torch.Tensor:
+        """Return the pooled task embedding used by both classifiers and cVAE."""
         batch = x.shape[0]
         tok = self.input_proj(x.reshape(batch, self.n_tokens, self.n_bands))
         tok = tok + self.area_embedding(self.area_idx)[None, :, :]
@@ -64,6 +71,7 @@ class JointFactorTransformer(nn.Module):
         return self.norm(pooled)
 
     def forward(self, x: torch.Tensor):
+        """Predict phase, grip, and hand logits from one batch of LFP features."""
         emb = self.extract_embedding(x)
         return self.head_phase(emb), self.head_grip(emb), self.head_hand(emb)
 

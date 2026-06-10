@@ -1,8 +1,11 @@
 """Train a joint phase/grip/hand channel-token transformer.
 
-This script trains one model over all phase/grip/hand combinations, predicts
-the three factors used by the cVAE condition, and writes pooled embeddings for
-downstream representation-space generation controls.
+This is the executable entry point for the transformer stage.
+
+It loads separated class files, expands each trial into phase-level samples,
+extracts MU or six-band channel-token features, trains one shared encoder with
+three heads (phase, grip, hand), and writes both evaluation outputs and pooled
+embeddings for the downstream embedding cVAE.
 """
 from __future__ import annotations
 
@@ -136,6 +139,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return p.parse_args(argv)
 
 
+# ---------------------------------------------------------------------------
+# Split helpers
+# ---------------------------------------------------------------------------
+
+
 def _heldout_split_indices(
     flat: dict,
     heldout_phase: int,
@@ -235,6 +243,11 @@ def _normal_split_indices(
         stratify=strat_temp,
     )
     return np.sort(train_idx), np.sort(val_idx), np.sort(test_idx)
+
+
+# ---------------------------------------------------------------------------
+# Training and evaluation
+# ---------------------------------------------------------------------------
 
 
 def _run_epoch(
@@ -507,6 +520,11 @@ def plot_confusion_matrix(cm: np.ndarray, target_names: list[str], title: str, s
     plt.savefig(save_path, dpi=150, bbox_inches="tight")
     plt.close(fig)
     print(f"Saved {save_path}")
+
+
+# ---------------------------------------------------------------------------
+# Plots and diagnostics
+# ---------------------------------------------------------------------------
 
 
 def plot_permutation_test(
@@ -869,6 +887,11 @@ def _jsonify_history(history: dict) -> dict:
     return {k: [float(vv) for vv in v] for k, v in history.items()}
 
 
+# ---------------------------------------------------------------------------
+# Output writing
+# ---------------------------------------------------------------------------
+
+
 def save_checkpoint(
     out_dir: Path,
     model: JointFactorTransformer,
@@ -889,6 +912,11 @@ def save_checkpoint(
     )
     print(f"Saved checkpoint to {checkpoint}")
     return checkpoint
+
+
+# ---------------------------------------------------------------------------
+# Main orchestration
+# ---------------------------------------------------------------------------
 
 
 def main(argv: list[str] | None = None) -> None:

@@ -1,4 +1,8 @@
-"""Attention-layer utilities shared by transformer encoders."""
+"""Attention-layer utilities for diagnostics.
+
+The active joint transformer uses this layer so attention weights can be saved
+for plots and area-importance summaries after a forward pass.
+"""
 from __future__ import annotations
 
 import inspect
