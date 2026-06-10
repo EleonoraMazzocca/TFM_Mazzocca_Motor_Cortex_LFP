@@ -33,10 +33,10 @@ from torch.utils.data import DataLoader
 # ---------------------------------------------------------------------------
 _HERE = Path(__file__).resolve().parent
 from transformer_encoder.data import PHASE_NAMES, GRIP_TO_ID, HAND_TO_ID
-from cvae.cvae_data import make_condition_vector
+from cvae.conditioning import make_condition_vector
 from cvae.cvae_model import LFPCVAE
-from run_cvae import compute_mmd
-from run_cvae_embeddings import (
+from cvae.metrics import compute_mmd
+from cvae.run_cvae_embeddings import (
     build_embedding_payload,
     split_payload,
     EmbeddingCVAEDataset,

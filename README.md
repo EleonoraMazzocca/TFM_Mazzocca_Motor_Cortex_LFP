@@ -434,4 +434,25 @@ Held-out samples are not used for early stopping, hyperparameter selection, or m
 
 ## cVAE
 
-The generation experiments live in `cvae/`, including embedding-space cVAE, MMD/cVAE diagnostics, latent ablation, and evaluation scripts.
+The active generation path is the embedding-space cVAE:
+
+```text
+transformer_encoder/run_joint_embedding.py
+-> cvae/run_embedding_cvae.py
+-> cvae/run_cvae_embeddings.py
+```
+
+`run_embedding_cvae.py` is the user-facing wrapper. It validates the held-out condition and checkpoint metadata, then calls `run_cvae_embeddings.py`. The cVAE trains on pooled joint-transformer embeddings, not directly on LFP waveforms.
+
+Active shared helpers:
+
+```text
+cvae/conditioning.py     one-hot phase/grip/hand condition vectors
+cvae/training.py         cVAE training loop, MMD-VAE loss path, augmentation helpers
+cvae/metrics.py          shared metrics such as compute_mmd()
+cvae/cvae_model.py       cVAE model definition
+```
+
+The older direct-data cVAE scripts have been archived in `archive/legacy_cvae/`. This includes the old `run_cvae.py`, raw-waveform wrappers, scaling experiments, and separability checks. They are preserved for historical reference, but they are not the active thesis pipeline.
+
+The older specialist transformer files have been archived in `archive/legacy_specialist_transformer/`. The active joint transformer now keeps only the shared attention-capturing layer in `transformer_encoder/attention.py`.

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import torch
 import torch.nn as nn
-from transformer_encoder.specialist_model import _AttnCapturingLayer
+from transformer_encoder.attention import AttnCapturingLayer
 from transformer_encoder.joint_embedding_data import AREA_IDX, N_AREAS, N_TOKENS, PADDING_MASK
 
 
@@ -31,7 +31,7 @@ class JointFactorTransformer(nn.Module):
         self.input_proj = nn.Linear(n_bands, d_model)
         self.area_embedding = nn.Embedding(N_AREAS, d_model)
         self.layers = nn.ModuleList([
-            _AttnCapturingLayer(
+            AttnCapturingLayer(
                 d_model=d_model,
                 nhead=n_heads,
                 dim_feedforward=feedforward_dim,

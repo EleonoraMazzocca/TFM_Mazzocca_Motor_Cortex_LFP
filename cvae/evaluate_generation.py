@@ -34,11 +34,11 @@ from sklearn.decomposition import PCA
 
 _HERE = Path(__file__).resolve().parent
 from transformer_encoder.data import PHASE_NAMES, GRIP_TO_ID, HAND_TO_ID  # noqa: E402
-from cvae.cvae_data import CONDITION_DIM, make_condition_vector  # noqa: E402
+from cvae.conditioning import CONDITION_DIM, make_condition_vector  # noqa: E402
 from cvae.cvae_model import LFPCVAE  # noqa: E402
 from transformer_encoder.joint_embedding_model import JointFactorTransformer  # noqa: E402
 from transformer_encoder.joint_embedding_data import BAND_NAMES_6  # noqa: E402
-from run_cvae import compute_mmd  # noqa: E402
+from cvae.metrics import compute_mmd  # noqa: E402
 
 ID_TO_GRIP = {v: k for k, v in GRIP_TO_ID.items()}
 ID_TO_HAND = {v: k for k, v in HAND_TO_ID.items()}

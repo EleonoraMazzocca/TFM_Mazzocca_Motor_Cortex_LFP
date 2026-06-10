@@ -26,10 +26,10 @@ from torch.utils.data import DataLoader, Dataset, TensorDataset
 
 
 from transformer_encoder.data import PHASE_NAMES, GRIP_TO_ID, HAND_TO_ID
-from cvae.cvae_data import make_condition_vector
+from cvae.conditioning import make_condition_vector
 from cvae.cvae_model import LFPCVAE
-from cvae.run_cvae import train_cvae, compute_mmd
-from cvae.separability_check import load_all_trials, collect_all_embeddings
+from cvae.training import train_cvae
+from cvae.metrics import compute_mmd
 from transformer_encoder.joint_embedding_data import (  # noqa: E402
     BAND_NAMES_6,
     JointEmbeddingDataset,
@@ -225,41 +225,11 @@ def _torch_load_checkpoint(path: str | Path, device: torch.device) -> dict:
 def build_embedding_payload(args: argparse.Namespace, device: torch.device) -> tuple:
     if args.joint_checkpoint:
         return build_joint_embedding_payload(args, device)
-
-    checkpoints = {
-        1: args.checkpoint_reach,
-    }
-    if args.checkpoint_prereach:
-        checkpoints[0] = args.checkpoint_prereach
-    if args.checkpoint_grasp:
-        checkpoints[2] = args.checkpoint_grasp
-    checkpoints = {ph: p for ph, p in checkpoints.items() if p and Path(p).exists()}
-    if 1 not in checkpoints:
-        raise SystemExit("--checkpoint_reach must exist unless --joint_checkpoint is used")
-
-    data = load_all_trials(Path(args.data_dir))
-    if args.dry_run and len(data["y_grip"]) > 500:
-        rng = np.random.default_rng(args.seed)
-        keep = rng.choice(len(data["y_grip"]), size=500, replace=False)
-        keep.sort()
-        for key in ("file_idx", "trial_idx", "y_grip", "y_hand", "y_angle"):
-            data[key] = data[key][keep]
-
-    rep = collect_all_embeddings(checkpoints, data, args, device)
-    _ct = getattr(args, "condition_table",    None)
-    _ck = getattr(args, "condition_key_order", None)
-    conditions = np.stack([
-        lookup_condition(int(ph), int(g), int(h), _ct, _ck)
-        if _ct is not None else make_condition_vector(int(ph), int(g), int(h))
-        for ph, g, h in zip(rep["y_phase"], rep["y_grip"], rep["y_hand"])
-    ]).astype(np.float32)
-    rep["condition"] = conditions
-    rep["is_heldout"] = (
-        (rep["y_phase"] == PHASE_NAMES.index(args.heldout_phase)) &
-        (rep["y_grip"] == GRIP_TO_ID[args.heldout_grip]) &
-        (rep["y_hand"] == HAND_TO_ID[args.heldout_hand])
+    raise SystemExit(
+        "--joint_checkpoint is required. The old specialist-checkpoint embedding "
+        "path has been archived; use transformer_encoder.run_joint_embedding first, "
+        "then pass its checkpoint here."
     )
-    return rep, None
 
 
 def build_joint_embedding_payload(args: argparse.Namespace, device: torch.device) -> tuple:
@@ -788,7 +758,7 @@ def compute_collapse_diagnostics(
     Augmentation is always disabled here. Saves collapse_diagnostics.npz
     to out_dir and returns a summary dict.
     """
-    from cvae.cvae_data import make_condition_vector
+    from cvae.conditioning import make_condition_vector
 
     model.eval()
 
@@ -856,7 +826,6 @@ def compute_collapse_diagnostics(
         x_gen_combo = model.generate(c_tensor, n_samples=500, device=device,
                                      generator=gen_rng).cpu().numpy()
 
-        from cvae.run_cvae import compute_mmd
         mmd_val = compute_mmd(x_gen_combo, x_real_combo, bandwidth=bw)
         ph_name = PHASE_NAMES[phase_id]
         grip_name = ID_TO_GRIP[grip_id]
@@ -897,8 +866,7 @@ def compute_collapse_diagnostics(
     x_gen_held   = model.generate(c_held_t, n_samples=500, device=device,
                                   generator=gen_rng_held).cpu().numpy()
 
-    from cvae.run_cvae import compute_mmd as _cmmd
-    mmd_held = _cmmd(x_gen_held, x_held, bandwidth=bw_held)
+    mmd_held = compute_mmd(x_gen_held, x_held, bandwidth=bw_held)
     print(f"    held-out MMD: {mmd_held:.5f}  (bw={bw_held:.4f}  n_real={len(x_held)})")
 
     # -- Save ------------------------------------------------------------------
