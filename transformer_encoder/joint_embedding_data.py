@@ -17,17 +17,32 @@ import torch
 from scipy import signal
 from sklearn.model_selection import train_test_split
 from torch.utils.data import Dataset
-from transformer_encoder.data import (
-    ANGLE_TO_ID,
-    AREA_SLICES,
-    GRIP_TO_ID,
-    HAND_TO_ID,
-    MAX_AREA_CHANNELS,
-    N_AREAS,
-    PHASE_NAMES,
+# ---------------------------------------------------------------------------
+# Shared constants (canonical definitions — data.py re-exports these)
+# ---------------------------------------------------------------------------
+N_PHASES = 3
+PHASE_NAMES = ["prereach", "reach", "grasp"]
+AREA_NAMES = ["PMvR", "M1", "PMdR", "PMdL"]
+AREA_SLICES = (
+    ("PMvR", 0, 96),
+    ("M1", 96, 128),
+    ("PMdR", 128, 224),
+    ("PMdL", 224, 256),
 )
+N_AREAS = len(AREA_SLICES)
+MAX_AREA_CHANNELS = 96   # largest area (PMvR, PMdR); smaller areas are zero-padded
+AREA_FEATURE_DIM = MAX_AREA_CHANNELS
+GRIP_TO_ID = {"power": 0, "precision": 1}
+HAND_TO_ID = {"left": 0, "right": 1}
+ANGLE_TO_ID = {"0": 0, "45": 1, "90": 2, "135": 3}
+ID_TO_PHASE = {i: name for i, name in enumerate(PHASE_NAMES)}
+ID_TO_GRIP = {v: k for k, v in GRIP_TO_ID.items()}
+ID_TO_HAND = {v: k for k, v in HAND_TO_ID.items()}
+ID_TO_ANGLE = {v: k for k, v in ANGLE_TO_ID.items()}
 
-
+# ---------------------------------------------------------------------------
+# Joint embedding constants
+# ---------------------------------------------------------------------------
 INPUT_MODES = ("mu", "broadband6")
 FS_BROADBAND = 2034.5
 BAND_NAMES_6 = ["beta", "low_gamma", "high_gamma", "low_ripple", "high_ripple", "MU"]
