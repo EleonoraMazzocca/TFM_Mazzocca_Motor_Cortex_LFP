@@ -296,52 +296,61 @@ Important: class separation does not remove or flatten the phase axis. Each save
 
 ## Baseline And Diagnostic Scripts
 
-### `baseline_linear_classifier/data_classification.py`
+### `baseline_linear_classifier/run_linear_phase_grip_hand.py`
 
-Purpose: broad classical baseline over many older task definitions.
+Purpose: direct logistic-regression baseline for the current transformer task.
 
-Intuition: this script asks many decoding questions, for example power vs precision, left vs right, angle classification, phase classification, and unimanual vs bimanual. It converts each trial into compact per-channel mean-absolute-amplitude features and trains logistic regression models.
+Intuition: this script uses the same separated class files as the transformer, expands each trial into one sample per phase, extracts the same MU or six-band features, and trains three independent linear heads for `phase`, `grip`, and `hand`. This gives a simple baseline for asking whether the transformer architecture improves over linear decoding on the same inputs and split.
 
-Status in this project:
+Example, six-band held-out comparison:
 
-- Useful as an older broad baseline and exploratory sanity check.
-- Not the cleanest direct comparison to the current transformer, because the current transformer predicts `phase`, `grip`, and `hand` using phase-expanded samples.
+```bash
+python -m baseline_linear_classifier.run_linear_phase_grip_hand \
+  --data_dir data/classes \
+  --input_mode broadband6 \
+  --heldout \
+  --heldout_phase grasp \
+  --heldout_grip precision \
+  --heldout_hand right \
+  --out_dir outputs/broadband6/linear_heldout_grasp_precision_right
+```
+
+Example, MU held-out comparison:
+
+```bash
+python -m baseline_linear_classifier.run_linear_phase_grip_hand \
+  --data_dir data/classes \
+  --input_mode mu \
+  --heldout \
+  --heldout_phase grasp \
+  --heldout_grip precision \
+  --heldout_hand right \
+  --out_dir outputs/mu/linear_heldout_grasp_precision_right
+```
 
 Main outputs:
 
 ```text
-scores_all_partial.npy
-scores_all.npy
-baseline_linear_classifier/logs/data_classification_<timestamp>.log
-baseline_linear_classifier/logs/data_classification_<timestamp>.txt
-baseline_linear_classifier/logs/data_classification_latest.txt
-baseline_linear_classifier/logs/data_classification_confusion_matrices/<timestamp>/...
+outputs/.../summary.json
+outputs/.../phase_results.json
+outputs/.../grip_results.json
+outputs/.../hand_results.json
+outputs/.../confusion_<head>_<split>.png
+outputs/.../normalization_stats.npz
 ```
 
-The score arrays store numerical results. The text files are human-readable summaries. The confusion-matrix folder contains CSV/PNG files for individual task results.
+The reported splits are `seen_test` for combinations available during training and `heldout_test` for the held-out phase/grip/hand combination.
 
-### `baseline_linear_classifier/run_classifier2_compositional.py`
+### Archived linear baselines
 
-Purpose: compositional logistic-regression baseline for the older `grip/hand/angle` setup.
-
-Intuition: it loads the separated unimanual class files, extracts simple per-channel amplitude features, and trains separate logistic classifiers for each movement phase. It holds out a compositional condition, originally precision + right + 135 degrees, to test whether the linear model generalizes to a missing combination.
-
-Status in this project:
-
-- Useful as a baseline for grip/hand/angle compositional decoding.
-- Not yet fully matched to the newer transformer target set (`phase`, `grip`, `hand`). A stricter comparison should reuse the transformer phase-expanded samples and train linear heads for `phase`, `grip`, and `hand`.
-
-Default outputs:
+The previous broad task-suite and grip/hand/angle compositional baselines are preserved in `archive/legacy_linear_classifier/`:
 
 ```text
-baseline_linear_classifier/logs/classifier2/all_results.json
-baseline_linear_classifier/logs/classifier2/split_balance_report.txt
-baseline_linear_classifier/logs/classifier2/accuracy_summary.png
-baseline_linear_classifier/logs/classifier2/<phase>/grip_results.json
-baseline_linear_classifier/logs/classifier2/<phase>/hand_results.json
-baseline_linear_classifier/logs/classifier2/<phase>/angle_results.json
-baseline_linear_classifier/logs/classifier2/<phase>/confusion_matrices.png
+archive/legacy_linear_classifier/data_classification.py
+archive/legacy_linear_classifier/run_classifier2_compositional.py
 ```
+
+They are useful historical references, but they are no longer the active baseline for comparing against the current `phase`, `grip`, `hand` transformer.
 
 ### `archive/diagnostics/leakage_verification_tool.py`
 
@@ -358,7 +367,7 @@ Example:
 
 ```bash
 python archive/diagnostics/leakage_verification_tool.py \
-  --classification baseline_linear_classifier/data_classification.py \
+  --classification archive/legacy_linear_classifier/data_classification.py \
   --standardization preprocess_pipeline/data_standardization.py \
   --preprocess preprocess_pipeline/data_preprocess.py \
   --extra-scripts archive/diagnostics/build_session_aware_structured_split.py \
