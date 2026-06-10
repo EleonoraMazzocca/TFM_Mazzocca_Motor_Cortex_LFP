@@ -29,6 +29,8 @@ import json
 import subprocess
 from pathlib import Path
 
+_HERE = Path(__file__).resolve().parent
+
 import numpy as np
 
 from transformer_encoder.data import PHASE_NAMES

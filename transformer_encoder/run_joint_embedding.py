@@ -11,6 +11,8 @@ import copy
 import json
 from pathlib import Path
 
+_HERE = Path(__file__).resolve().parent
+
 import numpy as np
 import torch
 import torch.nn as nn
