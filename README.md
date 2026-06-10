@@ -331,7 +331,7 @@ baseline_linear_classifier/logs/classifier2/<phase>/angle_results.json
 baseline_linear_classifier/logs/classifier2/<phase>/confusion_matrices.png
 ```
 
-### `scripts/leakage_verification_tool.py`
+### `archive/diagnostics/leakage_verification_tool.py`
 
 Purpose: static audit tool for possible train/test leakage risks.
 
@@ -345,11 +345,11 @@ Status in this project:
 Example:
 
 ```bash
-python -m scripts.leakage_verification_tool \
+python archive/diagnostics/leakage_verification_tool.py \
   --classification baseline_linear_classifier/data_classification.py \
   --standardization preprocess_pipeline/data_standardization.py \
   --preprocess preprocess_pipeline/data_preprocess.py \
-  --extra-scripts preprocess_pipeline/build_session_aware_structured_split.py \
+  --extra-scripts archive/diagnostics/build_session_aware_structured_split.py \
   --output outputs/leakage_verification_report.txt
 ```
 
@@ -361,7 +361,7 @@ outputs/leakage_verification_report.txt
 
 If `--output` is omitted, the report is printed to the terminal only.
 
-### `preprocess_pipeline/build_session_aware_structured_split.py`
+### `archive/diagnostics/build_session_aware_structured_split.py`
 
 Purpose: creates a JSON manifest for a session-aware/compositional split from the structured session files.
 
@@ -371,12 +371,12 @@ Status in this project:
 
 - It is a helper for stricter future experiments.
 - It does not appear to be the split actually used by the current `transformer_encoder/run_joint_embedding.py`, which builds its own split after loading separated class files and applying `phase_expand()`.
-- Keep it for reproducibility/future cleanup, but do not describe it as part of the main transformer/cVAE run unless you explicitly use it.
+- It has been moved to `archive/diagnostics/` to avoid confusing it with the active preprocessing path. Keep it for reproducibility/future cleanup, but do not describe it as part of the main transformer/cVAE run unless you explicitly use it.
 
 Run:
 
 ```bash
-python -m preprocess_pipeline.build_session_aware_structured_split
+python archive/diagnostics/build_session_aware_structured_split.py
 ```
 
 Default output:
