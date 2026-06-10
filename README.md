@@ -89,12 +89,24 @@ Purpose: converts one raw MATLAB LFP recording into simple NumPy files. This is 
 
 Intuition: it opens the raw recording, extracts the two LFP blocks (`LFP1` and `LFP2`), saves each as a separate array, and stores small metadata needed to align event times with the LFP sampling rate.
 
-Current session selection: the script currently uses the `name_file` variable inside the file, for example `20180619Y`. To process another session, change that value before running.
+Session selection: pass one or more session IDs, or pass no session IDs to process every `lfp_data_*.mat` file found in `RawData/`. Existing outputs are skipped unless `--overwrite` is used.
 
-Run:
+Run one session:
+
+```bash
+python -m preprocess_pipeline.data_standardization 20180619Y
+```
+
+Run all raw sessions:
 
 ```bash
 python -m preprocess_pipeline.data_standardization
+```
+
+Force regeneration:
+
+```bash
+python -m preprocess_pipeline.data_standardization --overwrite
 ```
 
 Inputs:
