@@ -1,0 +1,138 @@
+[
+  {
+    "candidate_id": "codex_001_left_right_body_side",
+    "sentences": [
+      "Before movement, the left arm on the left body side prepares a broad palm hold.",
+      "Before movement, the right arm on the right body side prepares a broad palm hold.",
+      "Before movement, the left arm on the left body side prepares a fine fingertip hold.",
+      "Before movement, the right arm on the right body side prepares a fine fingertip hold.",
+      "During transport, the left arm on the left body side carries a broad palm hold.",
+      "During transport, the right arm on the right body side carries a broad palm hold.",
+      "During transport, the left arm on the left body side carries a fine fingertip hold.",
+      "During transport, the right arm on the right body side carries a fine fingertip hold.",
+      "At object contact, the left arm on the left body side completes a broad palm hold.",
+      "At object contact, the right arm on the right body side completes a broad palm hold.",
+      "At object contact, the left arm on the left body side completes a fine fingertip hold.",
+      "At object contact, the right arm on the right body side completes a fine fingertip hold."
+    ]
+  },
+  {
+    "candidate_id": "codex_002_left_right_workspace",
+    "sentences": [
+      "In the pre-reach interval, the left workspace effector prepares broad whole-palm contact.",
+      "In the pre-reach interval, the right workspace effector prepares broad whole-palm contact.",
+      "In the pre-reach interval, the left workspace effector prepares narrow fingertip contact.",
+      "In the pre-reach interval, the right workspace effector prepares narrow fingertip contact.",
+      "In the reach interval, the left workspace effector transports broad whole-palm contact.",
+      "In the reach interval, the right workspace effector transports broad whole-palm contact.",
+      "In the reach interval, the left workspace effector transports narrow fingertip contact.",
+      "In the reach interval, the right workspace effector transports narrow fingertip contact.",
+      "In the grasp interval, the left workspace effector closes broad whole-palm contact.",
+      "In the grasp interval, the right workspace effector closes broad whole-palm contact.",
+      "In the grasp interval, the left workspace effector closes narrow fingertip contact.",
+      "In the grasp interval, the right workspace effector closes narrow fingertip contact."
+    ]
+  },
+  {
+    "candidate_id": "codex_003_left_right_motor_channel",
+    "sentences": [
+      "Readiness context: left motor channel, broad-force object hold.",
+      "Readiness context: right motor channel, broad-force object hold.",
+      "Readiness context: left motor channel, fine-control object hold.",
+      "Readiness context: right motor channel, fine-control object hold.",
+      "Transport context: left motor channel, broad-force object hold.",
+      "Transport context: right motor channel, broad-force object hold.",
+      "Transport context: left motor channel, fine-control object hold.",
+      "Transport context: right motor channel, fine-control object hold.",
+      "Contact context: left motor channel, broad-force object hold.",
+      "Contact context: right motor channel, broad-force object hold.",
+      "Contact context: left motor channel, fine-control object hold.",
+      "Contact context: right motor channel, fine-control object hold."
+    ]
+  },
+  {
+    "candidate_id": "codex_004_bilateral_hemispace",
+    "sentences": [
+      "Early motor state with the left hemispace limb ready for a large-surface hold.",
+      "Early motor state with the right hemispace limb ready for a large-surface hold.",
+      "Early motor state with the left hemispace limb ready for a small-surface hold.",
+      "Early motor state with the right hemispace limb ready for a small-surface hold.",
+      "Middle motor state with the left hemispace limb moving for a large-surface hold.",
+      "Middle motor state with the right hemispace limb moving for a large-surface hold.",
+      "Middle motor state with the left hemispace limb moving for a small-surface hold.",
+      "Middle motor state with the right hemispace limb moving for a small-surface hold.",
+      "Late motor state with the left hemispace limb contacting for a large-surface hold.",
+      "Late motor state with the right hemispace limb contacting for a large-surface hold.",
+      "Late motor state with the left hemispace limb contacting for a small-surface hold.",
+      "Late motor state with the right hemispace limb contacting for a small-surface hold."
+    ]
+  },
+  {
+    "candidate_id": "codex_005_sinistral_dextral",
+    "sentences": [
+      "Preparatory epoch: sinistral left-side action, encompassing grip style.",
+      "Preparatory epoch: dextral right-side action, encompassing grip style.",
+      "Preparatory epoch: sinistral left-side action, pinpoint grip style.",
+      "Preparatory epoch: dextral right-side action, pinpoint grip style.",
+      "Approach epoch: sinistral left-side action, encompassing grip style.",
+      "Approach epoch: dextral right-side action, encompassing grip style.",
+      "Approach epoch: sinistral left-side action, pinpoint grip style.",
+      "Approach epoch: dextral right-side action, pinpoint grip style.",
+      "Closure epoch: sinistral left-side action, encompassing grip style.",
+      "Closure epoch: dextral right-side action, encompassing grip style.",
+      "Closure epoch: sinistral left-side action, pinpoint grip style.",
+      "Closure epoch: dextral right-side action, pinpoint grip style."
+    ]
+  },
+  {
+    "candidate_id": "codex_006_left_right_twice",
+    "sentences": [
+      "Pre-movement left-side trial: left effector prepares a broad stable hold.",
+      "Pre-movement right-side trial: right effector prepares a broad stable hold.",
+      "Pre-movement left-side trial: left effector prepares a delicate precise hold.",
+      "Pre-movement right-side trial: right effector prepares a delicate precise hold.",
+      "Transport left-side trial: left effector carries a broad stable hold.",
+      "Transport right-side trial: right effector carries a broad stable hold.",
+      "Transport left-side trial: left effector carries a delicate precise hold.",
+      "Transport right-side trial: right effector carries a delicate precise hold.",
+      "Contact left-side trial: left effector completes a broad stable hold.",
+      "Contact right-side trial: right effector completes a broad stable hold.",
+      "Contact left-side trial: left effector completes a delicate precise hold.",
+      "Contact right-side trial: right effector completes a delicate precise hold."
+    ]
+  },
+  {
+    "candidate_id": "codex_007_axis_words",
+    "sentences": [
+      "Initial phase; lateral-left axis; high-area grip.",
+      "Initial phase; lateral-right axis; high-area grip.",
+      "Initial phase; lateral-left axis; low-area grip.",
+      "Initial phase; lateral-right axis; low-area grip.",
+      "Transit phase; lateral-left axis; high-area grip.",
+      "Transit phase; lateral-right axis; high-area grip.",
+      "Transit phase; lateral-left axis; low-area grip.",
+      "Transit phase; lateral-right axis; low-area grip.",
+      "Terminal phase; lateral-left axis; high-area grip.",
+      "Terminal phase; lateral-right axis; high-area grip.",
+      "Terminal phase; lateral-left axis; low-area grip.",
+      "Terminal phase; lateral-right axis; low-area grip."
+    ]
+  },
+  {
+    "candidate_id": "codex_008_motor_plan",
+    "sentences": [
+      "Motor plan before onset: left arm route, strong enclosing contact.",
+      "Motor plan before onset: right arm route, strong enclosing contact.",
+      "Motor plan before onset: left arm route, careful fingertip contact.",
+      "Motor plan before onset: right arm route, careful fingertip contact.",
+      "Motor plan during reach: left arm route, strong enclosing contact.",
+      "Motor plan during reach: right arm route, strong enclosing contact.",
+      "Motor plan during reach: left arm route, careful fingertip contact.",
+      "Motor plan during reach: right arm route, careful fingertip contact.",
+      "Motor plan at closure: left arm route, strong enclosing contact.",
+      "Motor plan at closure: right arm route, strong enclosing contact.",
+      "Motor plan at closure: left arm route, careful fingertip contact.",
+      "Motor plan at closure: right arm route, careful fingertip contact."
+    ]
+  }
+]

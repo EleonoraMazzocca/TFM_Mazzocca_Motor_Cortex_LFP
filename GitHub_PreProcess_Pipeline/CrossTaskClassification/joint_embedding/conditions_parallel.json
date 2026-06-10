@@ -1,0 +1,512 @@
+[
+  {
+    "candidate_id": "llm_001",
+    "sentences": [
+      "In the readiness phase, the left effector forms a firm broad hold on the object.",
+      "In the readiness phase, the right effector forms a firm broad hold on the object.",
+      "In the readiness phase, the left effector forms a fine fingertip hold on the object.",
+      "In the readiness phase, the right effector forms a fine fingertip hold on the object.",
+      "In the transport phase, the left effector forms a firm broad hold on the object.",
+      "In the transport phase, the right effector forms a firm broad hold on the object.",
+      "In the transport phase, the left effector forms a fine fingertip hold on the object.",
+      "In the transport phase, the right effector forms a fine fingertip hold on the object.",
+      "In the contact phase, the left effector forms a firm broad hold on the object.",
+      "In the contact phase, the right effector forms a firm broad hold on the object.",
+      "In the contact phase, the left effector forms a fine fingertip hold on the object.",
+      "In the contact phase, the right effector forms a fine fingertip hold on the object."
+    ]
+  },
+  {
+    "candidate_id": "llm_002",
+    "sentences": [
+      "While preparing to move, broad-handed contact is taken by the leftward effector.",
+      "While preparing to move, broad-handed contact is taken by the rightward effector.",
+      "While preparing to move, fingertip contact is taken by the leftward effector.",
+      "While preparing to move, fingertip contact is taken by the rightward effector.",
+      "While moving toward it, broad-handed contact is taken by the leftward effector.",
+      "While moving toward it, broad-handed contact is taken by the rightward effector.",
+      "While moving toward it, fingertip contact is taken by the leftward effector.",
+      "While moving toward it, fingertip contact is taken by the rightward effector.",
+      "While touching the object, broad-handed contact is taken by the leftward effector.",
+      "While touching the object, broad-handed contact is taken by the rightward effector.",
+      "While touching the object, fingertip contact is taken by the leftward effector.",
+      "While touching the object, fingertip contact is taken by the rightward effector."
+    ]
+  },
+  {
+    "candidate_id": "llm_003",
+    "sentences": [
+      "The leftward limb applies a whole-hand hold, at the pre-movement point.",
+      "The rightward limb applies a whole-hand hold, at the pre-movement point.",
+      "The leftward limb applies a fingertip hold, at the pre-movement point.",
+      "The rightward limb applies a fingertip hold, at the pre-movement point.",
+      "The leftward limb applies a whole-hand hold, at the transport point.",
+      "The rightward limb applies a whole-hand hold, at the transport point.",
+      "The leftward limb applies a fingertip hold, at the transport point.",
+      "The rightward limb applies a fingertip hold, at the transport point.",
+      "The leftward limb applies a whole-hand hold, at the contact point.",
+      "The rightward limb applies a whole-hand hold, at the contact point.",
+      "The leftward limb applies a fingertip hold, at the contact point.",
+      "The rightward limb applies a fingertip hold, at the contact point."
+    ]
+  },
+  {
+    "candidate_id": "llm_004",
+    "sentences": [
+      "In the setup window, the left-side limb takes firm wide contact of the object.",
+      "In the setup window, the right-side limb takes firm wide contact of the object.",
+      "In the setup window, the left-side limb takes light fingertip contact of the object.",
+      "In the setup window, the right-side limb takes light fingertip contact of the object.",
+      "In the reaching window, the left-side limb takes firm wide contact of the object.",
+      "In the reaching window, the right-side limb takes firm wide contact of the object.",
+      "In the reaching window, the left-side limb takes light fingertip contact of the object.",
+      "In the reaching window, the right-side limb takes light fingertip contact of the object.",
+      "In the holding window, the left-side limb takes firm wide contact of the object.",
+      "In the holding window, the right-side limb takes firm wide contact of the object.",
+      "In the holding window, the left-side limb takes light fingertip contact of the object.",
+      "In the holding window, the right-side limb takes light fingertip contact of the object."
+    ]
+  },
+  {
+    "candidate_id": "llm_005",
+    "sentences": [
+      "In early preparation, the limb on the left side forms a full-hand clasp on the object.",
+      "In early preparation, the limb on the right side forms a full-hand clasp on the object.",
+      "In early preparation, the limb on the left side forms a fingertip clasp on the object.",
+      "In early preparation, the limb on the right side forms a fingertip clasp on the object.",
+      "In mid approach, the limb on the left side forms a full-hand clasp on the object.",
+      "In mid approach, the limb on the right side forms a full-hand clasp on the object.",
+      "In mid approach, the limb on the left side forms a fingertip clasp on the object.",
+      "In mid approach, the limb on the right side forms a fingertip clasp on the object.",
+      "In final contact, the limb on the left side forms a full-hand clasp on the object.",
+      "In final contact, the limb on the right side forms a full-hand clasp on the object.",
+      "In final contact, the limb on the left side forms a fingertip clasp on the object.",
+      "In final contact, the limb on the right side forms a fingertip clasp on the object."
+    ]
+  },
+  {
+    "candidate_id": "llm_006",
+    "sentences": [
+      "During readiness, a firm broad hold is taken by the left effector.",
+      "During readiness, a firm broad hold is taken by the right effector.",
+      "During readiness, a fine fingertip hold is taken by the left effector.",
+      "During readiness, a fine fingertip hold is taken by the right effector.",
+      "During transport, a firm broad hold is taken by the left effector.",
+      "During transport, a firm broad hold is taken by the right effector.",
+      "During transport, a fine fingertip hold is taken by the left effector.",
+      "During transport, a fine fingertip hold is taken by the right effector.",
+      "During contact, a firm broad hold is taken by the left effector.",
+      "During contact, a firm broad hold is taken by the right effector.",
+      "During contact, a fine fingertip hold is taken by the left effector.",
+      "During contact, a fine fingertip hold is taken by the right effector."
+    ]
+  },
+  {
+    "candidate_id": "llm_007",
+    "sentences": [
+      "The leftward effector applies broad-handed contact, in the readiness phase.",
+      "The rightward effector applies broad-handed contact, in the readiness phase.",
+      "The leftward effector applies fingertip contact, in the readiness phase.",
+      "The rightward effector applies fingertip contact, in the readiness phase.",
+      "The leftward effector applies broad-handed contact, in the transport phase.",
+      "The rightward effector applies broad-handed contact, in the transport phase.",
+      "The leftward effector applies fingertip contact, in the transport phase.",
+      "The rightward effector applies fingertip contact, in the transport phase.",
+      "The leftward effector applies broad-handed contact, in the contact phase.",
+      "The rightward effector applies broad-handed contact, in the contact phase.",
+      "The leftward effector applies fingertip contact, in the contact phase.",
+      "The rightward effector applies fingertip contact, in the contact phase."
+    ]
+  },
+  {
+    "candidate_id": "llm_008",
+    "sentences": [
+      "While preparing to move, the leftward limb takes a whole-hand hold of the object.",
+      "While preparing to move, the rightward limb takes a whole-hand hold of the object.",
+      "While preparing to move, the leftward limb takes a fingertip hold of the object.",
+      "While preparing to move, the rightward limb takes a fingertip hold of the object.",
+      "While moving toward it, the leftward limb takes a whole-hand hold of the object.",
+      "While moving toward it, the rightward limb takes a whole-hand hold of the object.",
+      "While moving toward it, the leftward limb takes a fingertip hold of the object.",
+      "While moving toward it, the rightward limb takes a fingertip hold of the object.",
+      "While touching the object, the leftward limb takes a whole-hand hold of the object.",
+      "While touching the object, the rightward limb takes a whole-hand hold of the object.",
+      "While touching the object, the leftward limb takes a fingertip hold of the object.",
+      "While touching the object, the rightward limb takes a fingertip hold of the object."
+    ]
+  },
+  {
+    "candidate_id": "llm_009",
+    "sentences": [
+      "At the pre-movement point, the left-side limb forms firm wide contact on the object.",
+      "At the pre-movement point, the right-side limb forms firm wide contact on the object.",
+      "At the pre-movement point, the left-side limb forms light fingertip contact on the object.",
+      "At the pre-movement point, the right-side limb forms light fingertip contact on the object.",
+      "At the transport point, the left-side limb forms firm wide contact on the object.",
+      "At the transport point, the right-side limb forms firm wide contact on the object.",
+      "At the transport point, the left-side limb forms light fingertip contact on the object.",
+      "At the transport point, the right-side limb forms light fingertip contact on the object.",
+      "At the contact point, the left-side limb forms firm wide contact on the object.",
+      "At the contact point, the right-side limb forms firm wide contact on the object.",
+      "At the contact point, the left-side limb forms light fingertip contact on the object.",
+      "At the contact point, the right-side limb forms light fingertip contact on the object."
+    ]
+  },
+  {
+    "candidate_id": "llm_010",
+    "sentences": [
+      "In the setup window, a full-hand clasp is taken by the limb on the left side.",
+      "In the setup window, a full-hand clasp is taken by the limb on the right side.",
+      "In the setup window, a fingertip clasp is taken by the limb on the left side.",
+      "In the setup window, a fingertip clasp is taken by the limb on the right side.",
+      "In the reaching window, a full-hand clasp is taken by the limb on the left side.",
+      "In the reaching window, a full-hand clasp is taken by the limb on the right side.",
+      "In the reaching window, a fingertip clasp is taken by the limb on the left side.",
+      "In the reaching window, a fingertip clasp is taken by the limb on the right side.",
+      "In the holding window, a full-hand clasp is taken by the limb on the left side.",
+      "In the holding window, a full-hand clasp is taken by the limb on the right side.",
+      "In the holding window, a fingertip clasp is taken by the limb on the left side.",
+      "In the holding window, a fingertip clasp is taken by the limb on the right side."
+    ]
+  },
+  {
+    "candidate_id": "llm_011",
+    "sentences": [
+      "The left effector applies a firm broad hold, in early preparation.",
+      "The right effector applies a firm broad hold, in early preparation.",
+      "The left effector applies a fine fingertip hold, in early preparation.",
+      "The right effector applies a fine fingertip hold, in early preparation.",
+      "The left effector applies a firm broad hold, in mid approach.",
+      "The right effector applies a firm broad hold, in mid approach.",
+      "The left effector applies a fine fingertip hold, in mid approach.",
+      "The right effector applies a fine fingertip hold, in mid approach.",
+      "The left effector applies a firm broad hold, in final contact.",
+      "The right effector applies a firm broad hold, in final contact.",
+      "The left effector applies a fine fingertip hold, in final contact.",
+      "The right effector applies a fine fingertip hold, in final contact."
+    ]
+  },
+  {
+    "candidate_id": "llm_012",
+    "sentences": [
+      "During readiness, the leftward effector takes broad-handed contact of the object.",
+      "During readiness, the rightward effector takes broad-handed contact of the object.",
+      "During readiness, the leftward effector takes fingertip contact of the object.",
+      "During readiness, the rightward effector takes fingertip contact of the object.",
+      "During transport, the leftward effector takes broad-handed contact of the object.",
+      "During transport, the rightward effector takes broad-handed contact of the object.",
+      "During transport, the leftward effector takes fingertip contact of the object.",
+      "During transport, the rightward effector takes fingertip contact of the object.",
+      "During contact, the leftward effector takes broad-handed contact of the object.",
+      "During contact, the rightward effector takes broad-handed contact of the object.",
+      "During contact, the leftward effector takes fingertip contact of the object.",
+      "During contact, the rightward effector takes fingertip contact of the object."
+    ]
+  },
+  {
+    "candidate_id": "llm_013",
+    "sentences": [
+      "In the readiness phase, the leftward limb forms a whole-hand hold on the object.",
+      "In the readiness phase, the rightward limb forms a whole-hand hold on the object.",
+      "In the readiness phase, the leftward limb forms a fingertip hold on the object.",
+      "In the readiness phase, the rightward limb forms a fingertip hold on the object.",
+      "In the transport phase, the leftward limb forms a whole-hand hold on the object.",
+      "In the transport phase, the rightward limb forms a whole-hand hold on the object.",
+      "In the transport phase, the leftward limb forms a fingertip hold on the object.",
+      "In the transport phase, the rightward limb forms a fingertip hold on the object.",
+      "In the contact phase, the leftward limb forms a whole-hand hold on the object.",
+      "In the contact phase, the rightward limb forms a whole-hand hold on the object.",
+      "In the contact phase, the leftward limb forms a fingertip hold on the object.",
+      "In the contact phase, the rightward limb forms a fingertip hold on the object."
+    ]
+  },
+  {
+    "candidate_id": "llm_014",
+    "sentences": [
+      "While preparing to move, firm wide contact is taken by the left-side limb.",
+      "While preparing to move, firm wide contact is taken by the right-side limb.",
+      "While preparing to move, light fingertip contact is taken by the left-side limb.",
+      "While preparing to move, light fingertip contact is taken by the right-side limb.",
+      "While moving toward it, firm wide contact is taken by the left-side limb.",
+      "While moving toward it, firm wide contact is taken by the right-side limb.",
+      "While moving toward it, light fingertip contact is taken by the left-side limb.",
+      "While moving toward it, light fingertip contact is taken by the right-side limb.",
+      "While touching the object, firm wide contact is taken by the left-side limb.",
+      "While touching the object, firm wide contact is taken by the right-side limb.",
+      "While touching the object, light fingertip contact is taken by the left-side limb.",
+      "While touching the object, light fingertip contact is taken by the right-side limb."
+    ]
+  },
+  {
+    "candidate_id": "llm_015",
+    "sentences": [
+      "The limb on the left side applies a full-hand clasp, at the pre-movement point.",
+      "The limb on the right side applies a full-hand clasp, at the pre-movement point.",
+      "The limb on the left side applies a fingertip clasp, at the pre-movement point.",
+      "The limb on the right side applies a fingertip clasp, at the pre-movement point.",
+      "The limb on the left side applies a full-hand clasp, at the transport point.",
+      "The limb on the right side applies a full-hand clasp, at the transport point.",
+      "The limb on the left side applies a fingertip clasp, at the transport point.",
+      "The limb on the right side applies a fingertip clasp, at the transport point.",
+      "The limb on the left side applies a full-hand clasp, at the contact point.",
+      "The limb on the right side applies a full-hand clasp, at the contact point.",
+      "The limb on the left side applies a fingertip clasp, at the contact point.",
+      "The limb on the right side applies a fingertip clasp, at the contact point."
+    ]
+  },
+  {
+    "candidate_id": "llm_016",
+    "sentences": [
+      "In the setup window, the left effector takes a firm broad hold of the object.",
+      "In the setup window, the right effector takes a firm broad hold of the object.",
+      "In the setup window, the left effector takes a fine fingertip hold of the object.",
+      "In the setup window, the right effector takes a fine fingertip hold of the object.",
+      "In the reaching window, the left effector takes a firm broad hold of the object.",
+      "In the reaching window, the right effector takes a firm broad hold of the object.",
+      "In the reaching window, the left effector takes a fine fingertip hold of the object.",
+      "In the reaching window, the right effector takes a fine fingertip hold of the object.",
+      "In the holding window, the left effector takes a firm broad hold of the object.",
+      "In the holding window, the right effector takes a firm broad hold of the object.",
+      "In the holding window, the left effector takes a fine fingertip hold of the object.",
+      "In the holding window, the right effector takes a fine fingertip hold of the object."
+    ]
+  },
+  {
+    "candidate_id": "llm_017",
+    "sentences": [
+      "In early preparation, the leftward effector forms broad-handed contact on the object.",
+      "In early preparation, the rightward effector forms broad-handed contact on the object.",
+      "In early preparation, the leftward effector forms fingertip contact on the object.",
+      "In early preparation, the rightward effector forms fingertip contact on the object.",
+      "In mid approach, the leftward effector forms broad-handed contact on the object.",
+      "In mid approach, the rightward effector forms broad-handed contact on the object.",
+      "In mid approach, the leftward effector forms fingertip contact on the object.",
+      "In mid approach, the rightward effector forms fingertip contact on the object.",
+      "In final contact, the leftward effector forms broad-handed contact on the object.",
+      "In final contact, the rightward effector forms broad-handed contact on the object.",
+      "In final contact, the leftward effector forms fingertip contact on the object.",
+      "In final contact, the rightward effector forms fingertip contact on the object."
+    ]
+  },
+  {
+    "candidate_id": "llm_018",
+    "sentences": [
+      "During readiness, a whole-hand hold is taken by the leftward limb.",
+      "During readiness, a whole-hand hold is taken by the rightward limb.",
+      "During readiness, a fingertip hold is taken by the leftward limb.",
+      "During readiness, a fingertip hold is taken by the rightward limb.",
+      "During transport, a whole-hand hold is taken by the leftward limb.",
+      "During transport, a whole-hand hold is taken by the rightward limb.",
+      "During transport, a fingertip hold is taken by the leftward limb.",
+      "During transport, a fingertip hold is taken by the rightward limb.",
+      "During contact, a whole-hand hold is taken by the leftward limb.",
+      "During contact, a whole-hand hold is taken by the rightward limb.",
+      "During contact, a fingertip hold is taken by the leftward limb.",
+      "During contact, a fingertip hold is taken by the rightward limb."
+    ]
+  },
+  {
+    "candidate_id": "llm_019",
+    "sentences": [
+      "The left-side limb applies firm wide contact, in the readiness phase.",
+      "The right-side limb applies firm wide contact, in the readiness phase.",
+      "The left-side limb applies light fingertip contact, in the readiness phase.",
+      "The right-side limb applies light fingertip contact, in the readiness phase.",
+      "The left-side limb applies firm wide contact, in the transport phase.",
+      "The right-side limb applies firm wide contact, in the transport phase.",
+      "The left-side limb applies light fingertip contact, in the transport phase.",
+      "The right-side limb applies light fingertip contact, in the transport phase.",
+      "The left-side limb applies firm wide contact, in the contact phase.",
+      "The right-side limb applies firm wide contact, in the contact phase.",
+      "The left-side limb applies light fingertip contact, in the contact phase.",
+      "The right-side limb applies light fingertip contact, in the contact phase."
+    ]
+  },
+  {
+    "candidate_id": "llm_020",
+    "sentences": [
+      "While preparing to move, the limb on the left side takes a full-hand clasp of the object.",
+      "While preparing to move, the limb on the right side takes a full-hand clasp of the object.",
+      "While preparing to move, the limb on the left side takes a fingertip clasp of the object.",
+      "While preparing to move, the limb on the right side takes a fingertip clasp of the object.",
+      "While moving toward it, the limb on the left side takes a full-hand clasp of the object.",
+      "While moving toward it, the limb on the right side takes a full-hand clasp of the object.",
+      "While moving toward it, the limb on the left side takes a fingertip clasp of the object.",
+      "While moving toward it, the limb on the right side takes a fingertip clasp of the object.",
+      "While touching the object, the limb on the left side takes a full-hand clasp of the object.",
+      "While touching the object, the limb on the right side takes a full-hand clasp of the object.",
+      "While touching the object, the limb on the left side takes a fingertip clasp of the object.",
+      "While touching the object, the limb on the right side takes a fingertip clasp of the object."
+    ]
+  },
+  {
+    "candidate_id": "llm_021",
+    "sentences": [
+      "At the pre-movement point, the left effector forms a firm broad hold on the object.",
+      "At the pre-movement point, the right effector forms a firm broad hold on the object.",
+      "At the pre-movement point, the left effector forms a fine fingertip hold on the object.",
+      "At the pre-movement point, the right effector forms a fine fingertip hold on the object.",
+      "At the transport point, the left effector forms a firm broad hold on the object.",
+      "At the transport point, the right effector forms a firm broad hold on the object.",
+      "At the transport point, the left effector forms a fine fingertip hold on the object.",
+      "At the transport point, the right effector forms a fine fingertip hold on the object.",
+      "At the contact point, the left effector forms a firm broad hold on the object.",
+      "At the contact point, the right effector forms a firm broad hold on the object.",
+      "At the contact point, the left effector forms a fine fingertip hold on the object.",
+      "At the contact point, the right effector forms a fine fingertip hold on the object."
+    ]
+  },
+  {
+    "candidate_id": "llm_022",
+    "sentences": [
+      "In the setup window, broad-handed contact is taken by the leftward effector.",
+      "In the setup window, broad-handed contact is taken by the rightward effector.",
+      "In the setup window, fingertip contact is taken by the leftward effector.",
+      "In the setup window, fingertip contact is taken by the rightward effector.",
+      "In the reaching window, broad-handed contact is taken by the leftward effector.",
+      "In the reaching window, broad-handed contact is taken by the rightward effector.",
+      "In the reaching window, fingertip contact is taken by the leftward effector.",
+      "In the reaching window, fingertip contact is taken by the rightward effector.",
+      "In the holding window, broad-handed contact is taken by the leftward effector.",
+      "In the holding window, broad-handed contact is taken by the rightward effector.",
+      "In the holding window, fingertip contact is taken by the leftward effector.",
+      "In the holding window, fingertip contact is taken by the rightward effector."
+    ]
+  },
+  {
+    "candidate_id": "llm_023",
+    "sentences": [
+      "The leftward limb applies a whole-hand hold, in early preparation.",
+      "The rightward limb applies a whole-hand hold, in early preparation.",
+      "The leftward limb applies a fingertip hold, in early preparation.",
+      "The rightward limb applies a fingertip hold, in early preparation.",
+      "The leftward limb applies a whole-hand hold, in mid approach.",
+      "The rightward limb applies a whole-hand hold, in mid approach.",
+      "The leftward limb applies a fingertip hold, in mid approach.",
+      "The rightward limb applies a fingertip hold, in mid approach.",
+      "The leftward limb applies a whole-hand hold, in final contact.",
+      "The rightward limb applies a whole-hand hold, in final contact.",
+      "The leftward limb applies a fingertip hold, in final contact.",
+      "The rightward limb applies a fingertip hold, in final contact."
+    ]
+  },
+  {
+    "candidate_id": "llm_024",
+    "sentences": [
+      "During readiness, the left-side limb takes firm wide contact of the object.",
+      "During readiness, the right-side limb takes firm wide contact of the object.",
+      "During readiness, the left-side limb takes light fingertip contact of the object.",
+      "During readiness, the right-side limb takes light fingertip contact of the object.",
+      "During transport, the left-side limb takes firm wide contact of the object.",
+      "During transport, the right-side limb takes firm wide contact of the object.",
+      "During transport, the left-side limb takes light fingertip contact of the object.",
+      "During transport, the right-side limb takes light fingertip contact of the object.",
+      "During contact, the left-side limb takes firm wide contact of the object.",
+      "During contact, the right-side limb takes firm wide contact of the object.",
+      "During contact, the left-side limb takes light fingertip contact of the object.",
+      "During contact, the right-side limb takes light fingertip contact of the object."
+    ]
+  },
+  {
+    "candidate_id": "llm_025",
+    "sentences": [
+      "In the readiness phase, the limb on the left side forms a full-hand clasp on the object.",
+      "In the readiness phase, the limb on the right side forms a full-hand clasp on the object.",
+      "In the readiness phase, the limb on the left side forms a fingertip clasp on the object.",
+      "In the readiness phase, the limb on the right side forms a fingertip clasp on the object.",
+      "In the transport phase, the limb on the left side forms a full-hand clasp on the object.",
+      "In the transport phase, the limb on the right side forms a full-hand clasp on the object.",
+      "In the transport phase, the limb on the left side forms a fingertip clasp on the object.",
+      "In the transport phase, the limb on the right side forms a fingertip clasp on the object.",
+      "In the contact phase, the limb on the left side forms a full-hand clasp on the object.",
+      "In the contact phase, the limb on the right side forms a full-hand clasp on the object.",
+      "In the contact phase, the limb on the left side forms a fingertip clasp on the object.",
+      "In the contact phase, the limb on the right side forms a fingertip clasp on the object."
+    ]
+  },
+  {
+    "candidate_id": "llm_026",
+    "sentences": [
+      "While preparing to move, a firm broad hold is taken by the left effector.",
+      "While preparing to move, a firm broad hold is taken by the right effector.",
+      "While preparing to move, a fine fingertip hold is taken by the left effector.",
+      "While preparing to move, a fine fingertip hold is taken by the right effector.",
+      "While moving toward it, a firm broad hold is taken by the left effector.",
+      "While moving toward it, a firm broad hold is taken by the right effector.",
+      "While moving toward it, a fine fingertip hold is taken by the left effector.",
+      "While moving toward it, a fine fingertip hold is taken by the right effector.",
+      "While touching the object, a firm broad hold is taken by the left effector.",
+      "While touching the object, a firm broad hold is taken by the right effector.",
+      "While touching the object, a fine fingertip hold is taken by the left effector.",
+      "While touching the object, a fine fingertip hold is taken by the right effector."
+    ]
+  },
+  {
+    "candidate_id": "llm_027",
+    "sentences": [
+      "The leftward effector applies broad-handed contact, at the pre-movement point.",
+      "The rightward effector applies broad-handed contact, at the pre-movement point.",
+      "The leftward effector applies fingertip contact, at the pre-movement point.",
+      "The rightward effector applies fingertip contact, at the pre-movement point.",
+      "The leftward effector applies broad-handed contact, at the transport point.",
+      "The rightward effector applies broad-handed contact, at the transport point.",
+      "The leftward effector applies fingertip contact, at the transport point.",
+      "The rightward effector applies fingertip contact, at the transport point.",
+      "The leftward effector applies broad-handed contact, at the contact point.",
+      "The rightward effector applies broad-handed contact, at the contact point.",
+      "The leftward effector applies fingertip contact, at the contact point.",
+      "The rightward effector applies fingertip contact, at the contact point."
+    ]
+  },
+  {
+    "candidate_id": "llm_028",
+    "sentences": [
+      "In the setup window, the leftward limb takes a whole-hand hold of the object.",
+      "In the setup window, the rightward limb takes a whole-hand hold of the object.",
+      "In the setup window, the leftward limb takes a fingertip hold of the object.",
+      "In the setup window, the rightward limb takes a fingertip hold of the object.",
+      "In the reaching window, the leftward limb takes a whole-hand hold of the object.",
+      "In the reaching window, the rightward limb takes a whole-hand hold of the object.",
+      "In the reaching window, the leftward limb takes a fingertip hold of the object.",
+      "In the reaching window, the rightward limb takes a fingertip hold of the object.",
+      "In the holding window, the leftward limb takes a whole-hand hold of the object.",
+      "In the holding window, the rightward limb takes a whole-hand hold of the object.",
+      "In the holding window, the leftward limb takes a fingertip hold of the object.",
+      "In the holding window, the rightward limb takes a fingertip hold of the object."
+    ]
+  },
+  {
+    "candidate_id": "llm_029",
+    "sentences": [
+      "In early preparation, the left-side limb forms firm wide contact on the object.",
+      "In early preparation, the right-side limb forms firm wide contact on the object.",
+      "In early preparation, the left-side limb forms light fingertip contact on the object.",
+      "In early preparation, the right-side limb forms light fingertip contact on the object.",
+      "In mid approach, the left-side limb forms firm wide contact on the object.",
+      "In mid approach, the right-side limb forms firm wide contact on the object.",
+      "In mid approach, the left-side limb forms light fingertip contact on the object.",
+      "In mid approach, the right-side limb forms light fingertip contact on the object.",
+      "In final contact, the left-side limb forms firm wide contact on the object.",
+      "In final contact, the right-side limb forms firm wide contact on the object.",
+      "In final contact, the left-side limb forms light fingertip contact on the object.",
+      "In final contact, the right-side limb forms light fingertip contact on the object."
+    ]
+  },
+  {
+    "candidate_id": "llm_030",
+    "sentences": [
+      "During readiness, a full-hand clasp is taken by the limb on the left side.",
+      "During readiness, a full-hand clasp is taken by the limb on the right side.",
+      "During readiness, a fingertip clasp is taken by the limb on the left side.",
+      "During readiness, a fingertip clasp is taken by the limb on the right side.",
+      "During transport, a full-hand clasp is taken by the limb on the left side.",
+      "During transport, a full-hand clasp is taken by the limb on the right side.",
+      "During transport, a fingertip clasp is taken by the limb on the left side.",
+      "During transport, a fingertip clasp is taken by the limb on the right side.",
+      "During contact, a full-hand clasp is taken by the limb on the left side.",
+      "During contact, a full-hand clasp is taken by the limb on the right side.",
+      "During contact, a fingertip clasp is taken by the limb on the left side.",
+      "During contact, a fingertip clasp is taken by the limb on the right side."
+    ]
+  }
+]

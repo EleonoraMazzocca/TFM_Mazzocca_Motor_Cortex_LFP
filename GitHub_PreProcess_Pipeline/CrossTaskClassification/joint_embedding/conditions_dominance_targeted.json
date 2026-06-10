@@ -1,0 +1,138 @@
+[
+  {
+    "candidate_id": "dom_001_explicit_dominance",
+    "sentences": [
+      "Before movement, the non-dominant left hand prepares broad palm contact.",
+      "Before movement, the dominant right hand prepares broad palm contact.",
+      "Before movement, the non-dominant left hand prepares precise fingertip contact.",
+      "Before movement, the dominant right hand prepares precise fingertip contact.",
+      "During transport, the non-dominant left hand carries broad palm contact.",
+      "During transport, the dominant right hand carries broad palm contact.",
+      "During transport, the non-dominant left hand carries precise fingertip contact.",
+      "During transport, the dominant right hand carries precise fingertip contact.",
+      "At object contact, the non-dominant left hand completes broad palm contact.",
+      "At object contact, the dominant right hand completes broad palm contact.",
+      "At object contact, the non-dominant left hand completes precise fingertip contact.",
+      "At object contact, the dominant right hand completes precise fingertip contact."
+    ]
+  },
+  {
+    "candidate_id": "dom_002_primary_secondary",
+    "sentences": [
+      "Before movement, the secondary left-side hand prepares a broad stable hold.",
+      "Before movement, the primary right-side hand prepares a broad stable hold.",
+      "Before movement, the secondary left-side hand prepares a fine controlled hold.",
+      "Before movement, the primary right-side hand prepares a fine controlled hold.",
+      "During reach, the secondary left-side hand transports a broad stable hold.",
+      "During reach, the primary right-side hand transports a broad stable hold.",
+      "During reach, the secondary left-side hand transports a fine controlled hold.",
+      "During reach, the primary right-side hand transports a fine controlled hold.",
+      "During grasp, the secondary left-side hand closes a broad stable hold.",
+      "During grasp, the primary right-side hand closes a broad stable hold.",
+      "During grasp, the secondary left-side hand closes a fine controlled hold.",
+      "During grasp, the primary right-side hand closes a fine controlled hold."
+    ]
+  },
+  {
+    "candidate_id": "dom_003_dominant_role",
+    "sentences": [
+      "Pre-reach state: non-dominant effector, broad-force contact.",
+      "Pre-reach state: dominant effector, broad-force contact.",
+      "Pre-reach state: non-dominant effector, fine-control contact.",
+      "Pre-reach state: dominant effector, fine-control contact.",
+      "Reach state: non-dominant effector, broad-force contact.",
+      "Reach state: dominant effector, broad-force contact.",
+      "Reach state: non-dominant effector, fine-control contact.",
+      "Reach state: dominant effector, fine-control contact.",
+      "Grasp state: non-dominant effector, broad-force contact.",
+      "Grasp state: dominant effector, broad-force contact.",
+      "Grasp state: non-dominant effector, fine-control contact.",
+      "Grasp state: dominant effector, fine-control contact."
+    ]
+  },
+  {
+    "candidate_id": "dom_004_left_right_dominance_twice",
+    "sentences": [
+      "Initial phase, left non-dominant limb, large-surface grasp.",
+      "Initial phase, right dominant limb, large-surface grasp.",
+      "Initial phase, left non-dominant limb, small-surface grasp.",
+      "Initial phase, right dominant limb, small-surface grasp.",
+      "Transit phase, left non-dominant limb, large-surface grasp.",
+      "Transit phase, right dominant limb, large-surface grasp.",
+      "Transit phase, left non-dominant limb, small-surface grasp.",
+      "Transit phase, right dominant limb, small-surface grasp.",
+      "Terminal phase, left non-dominant limb, large-surface grasp.",
+      "Terminal phase, right dominant limb, large-surface grasp.",
+      "Terminal phase, left non-dominant limb, small-surface grasp.",
+      "Terminal phase, right dominant limb, small-surface grasp."
+    ]
+  },
+  {
+    "candidate_id": "dom_005_leading_supporting",
+    "sentences": [
+      "Before movement, the supporting left hand prepares a broad enclosing hold.",
+      "Before movement, the leading right hand prepares a broad enclosing hold.",
+      "Before movement, the supporting left hand prepares a delicate fingertip hold.",
+      "Before movement, the leading right hand prepares a delicate fingertip hold.",
+      "Moving toward the object, the supporting left hand carries a broad enclosing hold.",
+      "Moving toward the object, the leading right hand carries a broad enclosing hold.",
+      "Moving toward the object, the supporting left hand carries a delicate fingertip hold.",
+      "Moving toward the object, the leading right hand carries a delicate fingertip hold.",
+      "Touching the object, the supporting left hand completes a broad enclosing hold.",
+      "Touching the object, the leading right hand completes a broad enclosing hold.",
+      "Touching the object, the supporting left hand completes a delicate fingertip hold.",
+      "Touching the object, the leading right hand completes a delicate fingertip hold."
+    ]
+  },
+  {
+    "candidate_id": "dom_006_preferred_nonpreferred",
+    "sentences": [
+      "Readiness context with the non-preferred left hand and broad contact.",
+      "Readiness context with the preferred right hand and broad contact.",
+      "Readiness context with the non-preferred left hand and fine contact.",
+      "Readiness context with the preferred right hand and fine contact.",
+      "Transport context with the non-preferred left hand and broad contact.",
+      "Transport context with the preferred right hand and broad contact.",
+      "Transport context with the non-preferred left hand and fine contact.",
+      "Transport context with the preferred right hand and fine contact.",
+      "Contact context with the non-preferred left hand and broad contact.",
+      "Contact context with the preferred right hand and broad contact.",
+      "Contact context with the non-preferred left hand and fine contact.",
+      "Contact context with the preferred right hand and fine contact."
+    ]
+  },
+  {
+    "candidate_id": "dom_007_capability_words",
+    "sentences": [
+      "Preparation stage, less-practiced left effector, whole-palm contact.",
+      "Preparation stage, skilled right effector, whole-palm contact.",
+      "Preparation stage, less-practiced left effector, fingertip contact.",
+      "Preparation stage, skilled right effector, fingertip contact.",
+      "Approach stage, less-practiced left effector, whole-palm contact.",
+      "Approach stage, skilled right effector, whole-palm contact.",
+      "Approach stage, less-practiced left effector, fingertip contact.",
+      "Approach stage, skilled right effector, fingertip contact.",
+      "Closure stage, less-practiced left effector, whole-palm contact.",
+      "Closure stage, skilled right effector, whole-palm contact.",
+      "Closure stage, less-practiced left effector, fingertip contact.",
+      "Closure stage, skilled right effector, fingertip contact."
+    ]
+  },
+  {
+    "candidate_id": "dom_008_primary_opposite",
+    "sentences": [
+      "Pre-movement interval, opposite left hand, firm object hold.",
+      "Pre-movement interval, primary right hand, firm object hold.",
+      "Pre-movement interval, opposite left hand, precise object hold.",
+      "Pre-movement interval, primary right hand, precise object hold.",
+      "Reach interval, opposite left hand, firm object hold.",
+      "Reach interval, primary right hand, firm object hold.",
+      "Reach interval, opposite left hand, precise object hold.",
+      "Reach interval, primary right hand, precise object hold.",
+      "Grasp interval, opposite left hand, firm object hold.",
+      "Grasp interval, primary right hand, firm object hold.",
+      "Grasp interval, opposite left hand, precise object hold.",
+      "Grasp interval, primary right hand, precise object hold."
+    ]
+  }
+]
