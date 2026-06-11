@@ -435,7 +435,6 @@ transformer_encoder/run_joint_embedding.py   executable training/evaluation scri
 transformer_encoder/joint_embedding_data.py  loads class files, phase-expands trials, extracts/cache features
 transformer_encoder/joint_embedding_model.py neural network architecture
 transformer_encoder/attention.py             attention layer that stores attention weights for diagnostics
-transformer_encoder/data.py                  compatibility re-export of shared constants
 ```
 
 `run_joint_embedding.py` trains a joint encoder to predict:

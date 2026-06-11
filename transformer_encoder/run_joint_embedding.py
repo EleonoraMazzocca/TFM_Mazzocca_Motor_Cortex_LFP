@@ -42,7 +42,7 @@ from transformer_encoder.joint_embedding_data import (
 )
 from transformer_encoder.joint_embedding_model import JointFactorTransformer
 
-from transformer_encoder.data import AREA_NAMES, GRIP_TO_ID, HAND_TO_ID, PHASE_NAMES
+from transformer_encoder.joint_embedding_data import AREA_NAMES, GRIP_TO_ID, HAND_TO_ID, PHASE_NAMES
 
 
 HEADS = ("phase", "grip", "hand")

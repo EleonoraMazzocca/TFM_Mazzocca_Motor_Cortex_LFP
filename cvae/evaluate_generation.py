@@ -33,7 +33,7 @@ from scipy.stats import wasserstein_distance, kstest
 from sklearn.decomposition import PCA
 
 _HERE = Path(__file__).resolve().parent
-from transformer_encoder.data import PHASE_NAMES, GRIP_TO_ID, HAND_TO_ID  # noqa: E402
+from transformer_encoder.joint_embedding_data import PHASE_NAMES, GRIP_TO_ID, HAND_TO_ID  # noqa: E402
 from cvae.conditioning import CONDITION_DIM, make_condition_vector  # noqa: E402
 from cvae.cvae_model import LFPCVAE  # noqa: E402
 from transformer_encoder.joint_embedding_model import JointFactorTransformer  # noqa: E402

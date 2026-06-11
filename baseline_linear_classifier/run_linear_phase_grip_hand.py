@@ -22,7 +22,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, confusion_matrix, f1_score
 from sklearn.model_selection import train_test_split
 
-from transformer_encoder.data import GRIP_TO_ID, HAND_TO_ID, PHASE_NAMES
+from transformer_encoder.joint_embedding_data import GRIP_TO_ID, HAND_TO_ID, PHASE_NAMES
 from transformer_encoder.joint_embedding_data import (
     CHANNEL_VALID,
     INPUT_MODES,

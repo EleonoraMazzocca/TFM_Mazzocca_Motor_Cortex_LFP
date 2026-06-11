@@ -17,7 +17,7 @@ from pathlib import Path
 import torch
 
 _HERE = Path(__file__).resolve().parent
-from transformer_encoder.data import PHASE_NAMES  # noqa: E402
+from transformer_encoder.joint_embedding_data import PHASE_NAMES  # noqa: E402
 from transformer_encoder.joint_embedding_data import INPUT_MODES  # noqa: E402
 import cvae.run_cvae_embeddings as run_cvae_embeddings  # noqa: E402
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from transformer_encoder.data import GRIP_TO_ID, HAND_TO_ID, PHASE_NAMES
+from transformer_encoder.joint_embedding_data import GRIP_TO_ID, HAND_TO_ID, PHASE_NAMES
 
 N_PHASES = len(PHASE_NAMES)
 CONDITION_DIM = 7  # 3 phase + 2 grip + 2 hand

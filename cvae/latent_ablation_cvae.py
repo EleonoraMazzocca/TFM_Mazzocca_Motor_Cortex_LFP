@@ -32,7 +32,7 @@ from torch.utils.data import DataLoader
 # Path setup — mirrors run_embedding_cvae.py
 # ---------------------------------------------------------------------------
 _HERE = Path(__file__).resolve().parent
-from transformer_encoder.data import PHASE_NAMES, GRIP_TO_ID, HAND_TO_ID
+from transformer_encoder.joint_embedding_data import PHASE_NAMES, GRIP_TO_ID, HAND_TO_ID
 from cvae.conditioning import make_condition_vector
 from cvae.cvae_model import LFPCVAE
 from cvae.metrics import compute_mmd
