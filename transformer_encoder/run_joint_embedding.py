@@ -54,6 +54,11 @@ CLASS_NAMES = {
 
 
 def expected_heldout_run_name(args: argparse.Namespace) -> str:
+    """Folder-name convention for held-out runs.
+
+    Keeping the held-out condition in the folder name prevents accidental reuse
+    of a checkpoint for the wrong phase/grip/hand combination downstream.
+    """
     return f"transformer_heldout_{args.heldout_phase}_{args.heldout_grip}_{args.heldout_hand}"
 
 
@@ -75,6 +80,13 @@ def validate_output_dir(args: argparse.Namespace, out_dir: Path) -> None:
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    """Command-line interface for transformer training.
+
+    The important choices are:
+    - input_mode: MU amplitude or six broadband-derived amplitudes;
+    - heldout/no_heldout: strict zero-shot compositional split or ordinary split;
+    - skip_permutation: usually enabled while iterating because permutations retrain models.
+    """
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--data_dir", type=str, required=True)
     p.add_argument("--input_mode", choices=INPUT_MODES, default="mu")
@@ -151,6 +163,12 @@ def _heldout_split_indices(
     heldout_hand: int,
     seed: int,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Build the strict zero-shot split for a held-out phase/grip/hand combo.
+
+    The held-out combination is removed before train/validation splitting.
+    This is the key compositional-generalization protocol: validation is seen-only,
+    so early stopping cannot peek at the movement combination reserved for final testing.
+    """
     all_idx = np.arange(len(flat["y_phase"]))
     heldout_mask = (
         (flat["y_phase"] == heldout_phase)
@@ -162,6 +180,9 @@ def _heldout_split_indices(
     if len(heldout_idx) < 2:
         raise ValueError("Held-out phase/grip/hand combination has fewer than two samples.")
 
+    # Stratify remaining samples by the full phase×grip×hand×angle label.
+    # Angle is not predicted, but preserving it keeps the train/val/test class-file
+    # composition balanced across the labels that define the source files.
     strat_remaining = (
         flat["y_phase"][remaining_idx].astype(np.int64) * 16
         + flat["y_grip"][remaining_idx].astype(np.int64) * 8
@@ -200,6 +221,7 @@ def _train_test_split_maybe_stratified(
     random_state: int,
     stratify: np.ndarray | None,
 ) -> tuple[np.ndarray, np.ndarray]:
+    """Use stratification when possible, fall back safely for tiny classes."""
     if stratify is not None:
         _, counts = np.unique(stratify, return_counts=True)
         if len(counts) == 0 or counts.min() < 2:
@@ -217,6 +239,7 @@ def _normal_split_indices(
     flat_data: dict,
     seed: int,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Standard 80/10/10 stratified split when no held-out combo is requested."""
     idx = np.arange(len(flat_data["y_grip"]))
     strat = (
         flat_data["y_phase"].astype(np.int64) * 32
@@ -258,6 +281,13 @@ def _run_epoch(
     optimizer: torch.optim.Optimizer | None = None,
     loss_weights: tuple[float, float, float] = (1.0, 1.0, 1.0),
 ) -> tuple[float, float]:
+    """Run one training or evaluation epoch.
+
+    The transformer has one shared encoder and three classification heads. The
+    loss is the weighted sum of three cross-entropies. The returned accuracy is
+    the average of phase, grip, and hand correctness, so it is a compact training
+    progress metric rather than a single task's final score.
+    """
     is_train = optimizer is not None
     model.train(is_train)
     total_loss = 0.0
@@ -272,6 +302,8 @@ def _run_epoch(
             y_grip = y_grip.to(device)
             y_hand = y_hand.to(device)
             lp, lg, lh = model(x)
+            # lp/lg/lh are logits for phase, grip, and hand. They all receive
+            # gradients through the same pooled transformer embedding.
             loss = (
                 w_phase * nn.functional.cross_entropy(lp, y_phase, label_smoothing=label_smoothing)
                 + w_grip  * nn.functional.cross_entropy(lg, y_grip,  label_smoothing=label_smoothing)
@@ -301,10 +333,12 @@ def train_model(
     args: argparse.Namespace,
     device: torch.device,
 ) -> tuple[JointFactorTransformer, dict]:
+    """Train with early stopping on validation loss and return the best model."""
     train_loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True, num_workers=0)
     val_loader = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False, num_workers=0)
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     warmup_epochs = getattr(args, "warmup_epochs", 5)
+    # Warmup is optional. Current default is 0, which makes this scheduler a no-op.
     scheduler = LambdaLR(optimizer, lr_lambda=lambda ep: 1.0 if warmup_epochs <= 0 else min(1.0, (ep + 1) / warmup_epochs))
     history = {"train_loss": [], "train_acc": [], "val_loss": [], "val_acc": []}
     best_state = copy.deepcopy(model.state_dict())
@@ -346,10 +380,12 @@ def _train_model_quiet(
     args: argparse.Namespace,
     device: torch.device,
 ) -> JointFactorTransformer:
+    """Smaller-print training loop used only for permutation baselines."""
     train_loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True, num_workers=0)
     val_loader = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False, num_workers=0)
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     warmup_epochs = getattr(args, "warmup_epochs", 5)
+    # Warmup is optional. Current default is 0, which makes this scheduler a no-op.
     scheduler = LambdaLR(optimizer, lr_lambda=lambda ep: 1.0 if warmup_epochs <= 0 else min(1.0, (ep + 1) / warmup_epochs))
     best_state = copy.deepcopy(model.state_dict())
     best_val = float("inf")
@@ -376,6 +412,7 @@ def evaluate_model(
     device: torch.device,
     batch_size: int,
 ) -> dict:
+    """Evaluate each head separately and return accuracies plus confusion matrices."""
     model.eval()
     loader = DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=0)
     preds = {h: [] for h in HEADS}
@@ -413,6 +450,13 @@ def run_permutation_test(
     args: argparse.Namespace,
     device: torch.device,
 ) -> dict[str, list[float]]:
+    """Estimate a shuffled-label null distribution for seen-test accuracy.
+
+    Each iteration retrains a fresh transformer on the same features but with
+    independently permuted phase, grip, and hand labels. This answers whether
+    seen-test accuracy is above what the architecture could obtain from random
+    label-feature associations. It is not a held-out compositionality test.
+    """
     null = {head: [] for head in HEADS}
     rng = np.random.default_rng(args.seed + 1)
     perm_args = copy.copy(args)
@@ -450,6 +494,7 @@ def collect_embeddings(
     device: torch.device,
     batch_size: int,
 ) -> np.ndarray:
+    """Extract pooled transformer embeddings for cVAE training/evaluation."""
     model.eval()
     loader = DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=0)
     chunks = []
@@ -556,6 +601,7 @@ def collect_attention_weights(
     device: torch.device,
     batch_size: int,
 ) -> list[np.ndarray]:
+    """Run the model and collect saved attention tensors from each layer."""
     model.eval()
     loader = DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=0)
     layer_batches: list[list[np.ndarray]] | None = None
@@ -573,6 +619,7 @@ def collect_attention_weights(
 
 
 def compute_area_importance(layer_weights: list[np.ndarray]) -> tuple[np.ndarray, np.ndarray]:
+    """Aggregate last-layer attention into brain-area importance summaries."""
     attn = layer_weights[-1]
     attn_full = attn.mean(axis=(0, 1))
     nonpad_rows = ~PADDING_MASK
@@ -628,6 +675,7 @@ def compute_head_area_importance(
     device: torch.device,
     batch_size: int,
 ) -> dict[str, np.ndarray]:
+    """Gradient-based saliency: which areas most affect each classification head."""
     model.eval()
     criterion = nn.CrossEntropyLoss()
     loader = DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=0)
@@ -816,6 +864,7 @@ def compute_class_area_importance(
     layer_weights: list[np.ndarray],
     dataset: JointEmbeddingDataset,
 ) -> dict[str, np.ndarray]:
+    """Average attention by true class to ask whether classes use different areas."""
     attn = layer_weights[-1]
     col_mean = attn.mean(axis=1)[:, ~PADDING_MASK, :].mean(axis=1)
     sample_area = np.zeros((attn.shape[0], N_AREAS), dtype=np.float32)
@@ -871,6 +920,7 @@ def plot_class_area_attention(
 
 
 def save_evaluation_outputs(results: dict, prefix: str, out_dir: Path, make_plots: bool = True) -> None:
+    """Write per-head confusion matrices for one split: seen or heldout."""
     for head in HEADS:
         cm = np.asarray(results[head]["confusion_matrix"], dtype=np.int64)
         np.save(out_dir / f"{prefix}_{head}_confusion_matrix.npy", cm)
@@ -899,6 +949,7 @@ def save_checkpoint(
     stats: dict,
     history: dict,
 ) -> Path:
+    """Save everything downstream code needs: weights, config, normalization."""
     checkpoint = out_dir / "checkpoint.pt"
     torch.save(
         {
@@ -936,6 +987,9 @@ def main(argv: list[str] | None = None) -> None:
     validate_output_dir(args, out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
+    # 1. Build the sample table.
+    # load_joint_trials() indexes class files at trial level; phase_expand()
+    # turns each trial into three samples, one per behavioral phase.
     print(f"Loading {args.input_mode} trials from {args.data_dir}")
     trial_data = load_joint_trials(Path(args.data_dir), args.input_mode)
     flat = phase_expand(trial_data)
@@ -943,8 +997,12 @@ def main(argv: list[str] | None = None) -> None:
         rng = np.random.default_rng(args.seed)
         keep = np.sort(rng.choice(len(flat["y_phase"]), size=600, replace=False))
         flat = subset_flat(flat, keep)
+    # 2. Convert each phase sample into model features. The cache avoids
+    # repeating expensive broadband filtering across reruns with the same data.
     features = extract_and_cache_features(flat, args.cache_dir)
 
+    # 3. Split indices. In heldout mode, val is seen-only and the full held-out
+    # combination is reserved for final heldout_test evaluation.
     if args.heldout:
         train_idx, val_idx, test_idx, heldout_test_idx = _heldout_split_indices(
             flat,
@@ -962,6 +1020,7 @@ def main(argv: list[str] | None = None) -> None:
         f"heldout_test={0 if heldout_test_idx is None else len(heldout_test_idx)}"
     )
 
+    # 4. Normalize using training samples only, then create PyTorch datasets.
     stats = compute_norm_stats(features, train_idx)
     train_ds = JointEmbeddingDataset(features, flat, train_idx, stats)
     val_ds = JointEmbeddingDataset(features, flat, val_idx, stats)
@@ -971,6 +1030,8 @@ def main(argv: list[str] | None = None) -> None:
         else JointEmbeddingDataset(features, flat, heldout_test_idx, stats)
     )
 
+    # 5. Instantiate one shared transformer. n_bands is the feature dimension
+    # per channel token: 1 for MU, 6 for broadband6.
     n_bands = 1 if args.input_mode == "mu" else len(BAND_NAMES_6)
     model_kwargs = {
         "n_bands": n_bands,
@@ -988,6 +1049,7 @@ def main(argv: list[str] | None = None) -> None:
         feedforward_dim=args.feedforward_dim,
         dropout=args.dropout,
     ).to(device)
+    # 6. Train, then evaluate seen and held-out splits separately.
     model, history = train_model(model, train_ds, val_ds, args, device)
 
     seen_results = evaluate_model(model, test_ds, device, args.batch_size)
@@ -1002,12 +1064,15 @@ def main(argv: list[str] | None = None) -> None:
         },
     }
 
+    # 7. Save model-independent outputs first: normalization stats and confusion matrices.
     np.savez_compressed(out_dir / "normalization_stats.npz", **stats)
     save_evaluation_outputs(seen_results, "seen", out_dir, make_plots=not args.no_plot)
     if heldout_results is not None:
         save_evaluation_outputs(heldout_results, "heldout", out_dir, make_plots=not args.no_plot)
     checkpoint = save_checkpoint(out_dir, model, args, stats, history)
 
+    # 8. Optional permutation baseline. This is intentionally skipped for fast
+    # experiment iteration and enabled only for final sanity checks.
     null_distributions = None
     p_values = None
     if not args.skip_permutation and args.n_permutations > 0:
@@ -1032,6 +1097,8 @@ def main(argv: list[str] | None = None) -> None:
                     out_dir / f"permutation_{head}.png",
                 )
 
+    # 9. Optional diagnostics: training curves, attention summaries, and
+    # gradient saliency by brain area. These are descriptive, not training inputs.
     area_importance_seen = None
     attention_matrix_seen = None
     area_importance_heldout = None
@@ -1071,6 +1138,7 @@ def main(argv: list[str] | None = None) -> None:
         head_area_importance = compute_head_area_importance(model, test_ds, device, args.batch_size)
         plot_head_area_importance(head_area_importance, out_dir / "head_area_importance_gradcam.png")
 
+    # 10. Save pooled embeddings. These are the actual inputs to the embedding cVAE.
     emb_seen = collect_embeddings(model, test_ds, device, args.batch_size)
     np.savez_compressed(
         out_dir / "seen_embeddings.npz",
@@ -1105,6 +1173,7 @@ def main(argv: list[str] | None = None) -> None:
             y_angle=flat["y_angle"][heldout_test_idx],
         )
 
+    # 11. One JSON summary gathers configuration, split sizes, metrics, and diagnostics.
     summary = {
         "input_mode": args.input_mode,
         "n_samples": int(len(flat["y_phase"])),
