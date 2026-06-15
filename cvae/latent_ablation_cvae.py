@@ -33,14 +33,14 @@ from torch.utils.data import DataLoader
 # ---------------------------------------------------------------------------
 _HERE = Path(__file__).resolve().parent
 from transformer_encoder.joint_embedding_data import PHASE_NAMES, GRIP_TO_ID, HAND_TO_ID
-from cvae.conditioning import make_condition_vector
+from cvae.conditioning.onehot import make_condition_vector
+from cvae.conditioning.sentence import lookup_condition
 from cvae.cvae_model import LFPCVAE
 from cvae.metrics import compute_mmd
-from cvae.run_cvae_embeddings import (
+from cvae.embedding_cvae_pipeline import (
     build_embedding_payload,
     split_payload,
     EmbeddingCVAEDataset,
-    lookup_condition,
 )
 
 ID_TO_GRIP = {v: k for k, v in GRIP_TO_ID.items()}
@@ -95,7 +95,7 @@ def _compute_metrics(
     """Compute generation metrics for pre-generated normalized embeddings.
 
     All arrays are z-scored (normalized) embeddings.
-    Metric definitions match evaluate_generation() in run_cvae_embeddings.py.
+    Metric definitions match evaluate_generation() in embedding_cvae_pipeline.py.
     """
     # --- MMD ratio ---
     mmd_gen  = compute_mmd(x_gen,  x_real)
@@ -192,7 +192,7 @@ def run_ablation(
     payload["sample_index"] = np.arange(len(payload["y_grip"]), dtype=np.int64)
 
     split_seed = int(saved_args.get("split_seed", saved_args.get("seed", 42)))
-    train_p, val_p, held_p = split_payload(payload, split_seed)
+    train_p, val_p, seen_test_p, held_p = split_payload(payload, split_seed)
 
     # --- Normalization stats ---
     stats_raw = np.load(run_dir / "normalization_stats.npz")

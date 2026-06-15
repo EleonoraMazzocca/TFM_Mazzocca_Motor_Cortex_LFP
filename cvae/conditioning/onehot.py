@@ -1,4 +1,4 @@
-"""Condition-vector helpers for cVAE experiments."""
+"""One-hot condition encoding for (phase, grip, hand)."""
 from __future__ import annotations
 
 import numpy as np

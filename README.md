@@ -489,6 +489,15 @@ python -m transformer_encoder.run_joint_embedding \
 
 Use `--skip_permutation` while iterating. Remove it only when you want the slower shuffled-label sanity check.
 
+Transformer default hyperparameters in practice:
+
+- `batch_size=64`: smaller than the cVAE because transformer training is more memory-intensive per sample.
+- `lr=3e-4`: conservative default for attention-based models.
+- `n_layers=2`: two transformer encoder blocks.
+- `d_model=64`: size of each channel-token embedding.
+- `feedforward_dim=128`: width of the MLP inside each transformer block.
+- `dropout=0.35`: regularization inside the transformer.
+
 ## cVAE
 
 The active generation path is the embedding-space cVAE:
@@ -496,20 +505,69 @@ The active generation path is the embedding-space cVAE:
 ```text
 transformer_encoder/run_joint_embedding.py
 -> cvae/run_embedding_cvae.py
--> cvae/run_cvae_embeddings.py
+-> cvae/embedding_cvae_pipeline.py
 ```
 
-`run_embedding_cvae.py` is the user-facing wrapper. It validates the held-out condition and checkpoint metadata, then calls `run_cvae_embeddings.py`. The cVAE trains on pooled joint-transformer embeddings, not directly on LFP waveforms.
+`run_embedding_cvae.py` is the user-facing wrapper. It validates the held-out condition and checkpoint metadata, then calls `embedding_cvae_pipeline.py`. The cVAE trains on pooled joint-transformer embeddings, not directly on LFP waveforms.
+
+Example MU run:
+
+```bash
+python -m cvae.run_embedding_cvae \
+  --data_dir data/classes \
+  --joint_checkpoint outputs/mu/transformer_heldout_grasp_precision_right/checkpoint.pt \
+  --input_mode mu \
+  --heldout_phase grasp \
+  --heldout_grip precision \
+  --heldout_hand right \
+  --out_dir outputs/mu/cvae_grasp_precision_right
+```
+
+Example six-band run:
+
+```bash
+python -m cvae.run_embedding_cvae \
+  --data_dir data/classes \
+  --joint_checkpoint outputs/broadband6/transformer_heldout_grasp_precision_right/checkpoint.pt \
+  --input_mode broadband6 \
+  --heldout_phase grasp \
+  --heldout_grip precision \
+  --heldout_hand right \
+  --out_dir outputs/broadband6/cvae_grasp_precision_right
+```
+
+To rerun diagnostics from an existing cVAE output directory:
+
+```bash
+python -m cvae.run_embedding_cvae \
+  --diag_only \
+  --out_dir outputs/broadband6/cvae_grasp_precision_right
+```
+
+cVAE default hyperparameters in practice:
+
+- `batch_size=128`: larger than the transformer because the cVAE sees pooled embeddings and uses only MLPs, so it is cheaper per sample.
+- `hidden_dims=128 64 32`: three hidden layers in the encoder MLP, mirrored in reverse in the decoder.
+- `latent_dim=32`: size of the stochastic latent code `z`.
+- `lr=1e-3`: higher than the transformer because this is a smaller dense model in an easier embedding space.
+- `beta_max=1.0`: final weight on the KL term in the ELBO loss.
+- `beta_anneal_epochs=10`: linearly ramps the KL weight up over the first 10 epochs.
+- `noise_scale=0.1`: if `--denoising_aug` is enabled, adds Gaussian noise at 10% of each sample's embedding standard deviation.
+- `dropout=0.2`: regularization between hidden layers in the cVAE MLP.
 
 Active shared helpers:
 
 ```text
-cvae/conditioning.py     one-hot phase/grip/hand condition vectors
+cvae/conditioning/       condition encodings: onehot.py and sentence.py
 cvae/training.py         cVAE training loop, MMD-VAE loss path, augmentation helpers
 cvae/metrics.py          shared metrics such as compute_mmd()
 cvae/cvae_model.py       cVAE model definition
 ```
 
-The older direct-data cVAE scripts have been archived in `archive/legacy_cvae/`. This includes the old `run_cvae.py`, raw-waveform wrappers, scaling experiments, and separability checks. They are preserved for historical reference, but they are not the active thesis pipeline.
+## Main Libraries
 
-The older specialist transformer files have been archived in `archive/legacy_specialist_transformer/`. The active joint transformer now keeps only the shared attention-capturing layer in `transformer_encoder/attention.py`.
+- `PyTorch`: transformer and cVAE models, losses, optimizers, datasets, and training loops.
+- `NumPy`: array processing, normalization statistics, cached embeddings, and saved analysis artifacts.
+- `scikit-learn`: train/validation/test splitting, PCA, pairwise distances, and a few condition-label analysis helpers. Examples: `sklearn.decomposition.PCA`.
+- `SciPy`: statistical tests, Procrustes alignment, and some signal-processing utilities. Examples: `scipy.stats.wasserstein_distance`, `scipy.stats.kstest`, `scipy.linalg.orthogonal_procrustes`.
+- `matplotlib`: diagnostic figures and summary plots for transformer, cVAE, and condition-label evaluation.

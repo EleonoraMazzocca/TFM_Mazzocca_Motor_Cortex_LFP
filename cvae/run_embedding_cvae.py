@@ -17,9 +17,9 @@ from pathlib import Path
 import torch
 
 _HERE = Path(__file__).resolve().parent
-from transformer_encoder.joint_embedding_data import PHASE_NAMES  # noqa: E402
 from transformer_encoder.joint_embedding_data import INPUT_MODES  # noqa: E402
-import cvae.run_cvae_embeddings as run_cvae_embeddings  # noqa: E402
+from transformer_encoder.joint_embedding_data import PHASE_NAMES  # noqa: E402
+import cvae.embedding_cvae_pipeline as embedding_cvae_pipeline  # noqa: E402
 
 
 def expected_cvae_run_name(args: argparse.Namespace) -> str:
@@ -70,6 +70,44 @@ def validate_joint_checkpoint(args: argparse.Namespace) -> None:
             f"  checkpoint: {checkpoint_path}\n"
             f"  {joined}"
         )
+
+
+def load_saved_data_dir(out_dir: str) -> str:
+    """Recover the original data directory from a saved checkpoint."""
+    checkpoint_path = Path(out_dir) / "checkpoint.pt"
+    try:
+        ckpt = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
+    except TypeError:
+        ckpt = torch.load(checkpoint_path, map_location="cpu")
+    saved_data_dir = ckpt.get("args", {}).get("data_dir")
+    if not saved_data_dir:
+        raise SystemExit("--diag_only requires --data_dir because the checkpoint does not save it")
+    return saved_data_dir
+
+
+def append_optional_flags(args: argparse.Namespace, forwarded: list[str]) -> list[str]:
+    """Keep the wrapper small by handling simple on/off forwarding in one place."""
+    if args.sentence_condition_path:
+        forwarded += ["--sentence_condition_path", args.sentence_condition_path]
+    if args.sentence_key_order_path:
+        forwarded += ["--sentence_key_order_path", args.sentence_key_order_path]
+    if args.baseline_dirs:
+        forwarded += ["--baseline_dirs", *args.baseline_dirs]
+    if args.aug_dirs:
+        forwarded += ["--aug_dirs", *args.aug_dirs]
+
+    flag_map = {
+        "no_plot": "--no_plot",
+        "dry_run": "--dry_run",
+        "denoising_aug": "--denoising_aug",
+        "cond_dropout": "--cond_dropout",
+        "mmd_loss": "--mmd_loss",
+        "no_early_stopping": "--no_early_stopping",
+    }
+    for attr, flag in flag_map.items():
+        if getattr(args, attr, False):
+            forwarded.append(flag)
+    return forwarded
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -146,7 +184,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 def main(argv: list[str] | None = None) -> dict:
     args = parse_args(argv)
 
-    # --compare_only: delegate immediately, no data/model needed.
+    # These modes reuse the implementation module directly and only need
+    # minimal wrapper validation.
     if args.compare_only:
         if not args.out_dir or not args.baseline_dirs or not args.aug_dirs:
             raise SystemExit("--compare_only requires --out_dir, --baseline_dirs, and --aug_dirs")
@@ -156,7 +195,7 @@ def main(argv: list[str] | None = None) -> dict:
             "--baseline_dirs", *args.baseline_dirs,
             "--aug_dirs", *args.aug_dirs,
         ]
-        return run_cvae_embeddings.main(forwarded)
+        return embedding_cvae_pipeline.main(forwarded)
 
     if args.diag_only:
         if not args.out_dir:
@@ -169,15 +208,8 @@ def main(argv: list[str] | None = None) -> dict:
         if args.data_dir:
             forwarded += ["--data_dir", args.data_dir]
         else:
-            try:
-                ckpt = torch.load(Path(args.out_dir) / "checkpoint.pt", map_location="cpu", weights_only=False)
-            except TypeError:
-                ckpt = torch.load(Path(args.out_dir) / "checkpoint.pt", map_location="cpu")
-            saved_data_dir = ckpt.get("args", {}).get("data_dir")
-            if not saved_data_dir:
-                raise SystemExit("--diag_only requires --data_dir because the checkpoint does not save it")
-            forwarded += ["--data_dir", saved_data_dir]
-        return run_cvae_embeddings.main(forwarded)
+            forwarded += ["--data_dir", load_saved_data_dir(args.out_dir)]
+        return embedding_cvae_pipeline.main(forwarded)
 
     # Normal training requires --data_dir, --joint_checkpoint, --input_mode.
     if not args.data_dir:
@@ -233,28 +265,8 @@ def main(argv: list[str] | None = None) -> dict:
         "--lambda_mmd", str(args.lambda_mmd),
         "--condition_type", args.condition_type,
     ]
-    if args.sentence_condition_path:
-        forwarded += ["--sentence_condition_path", args.sentence_condition_path]
-    if args.sentence_key_order_path:
-        forwarded += ["--sentence_key_order_path", args.sentence_key_order_path]
-    if args.no_plot:
-        forwarded.append("--no_plot")
-    if args.dry_run:
-        forwarded.append("--dry_run")
-    if args.denoising_aug:
-        forwarded.append("--denoising_aug")
-    if args.cond_dropout:
-        forwarded.append("--cond_dropout")
-    if args.mmd_loss:
-        forwarded.append("--mmd_loss")
-    if args.no_early_stopping:
-        forwarded.append("--no_early_stopping")
-    if args.baseline_dirs:
-        forwarded += ["--baseline_dirs", *args.baseline_dirs]
-    if args.aug_dirs:
-        forwarded += ["--aug_dirs", *args.aug_dirs]
-
-    return run_cvae_embeddings.main(forwarded)
+    forwarded = append_optional_flags(args, forwarded)
+    return embedding_cvae_pipeline.main(forwarded)
 
 
 if __name__ == "__main__":
