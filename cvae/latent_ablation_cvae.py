@@ -23,6 +23,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import re
 
 import numpy as np
 import torch
@@ -345,6 +346,30 @@ def _print_interpretation(all_results: dict[str, dict[str, dict]]) -> None:
         print(f"    prior={c_prior:.3f}  zero={c_zero:.3f}  shuffled={c_shuffled:.3f}")
 
 
+def _combined_output_path(run_dirs: list[str]) -> Path:
+    """Build a deterministic combined output filename from the analysed runs.
+
+    This avoids overwriting results when baseline and MMD ablations are run
+    separately under the same parent directory.
+    """
+    paths = [Path(d) for d in run_dirs]
+    parent = paths[0].parent
+    names = [p.name for p in paths]
+    if len(names) == 1:
+        stem = names[0]
+    else:
+        common = names[0]
+        for name in names[1:]:
+            while common and not name.startswith(common):
+                common = common[:-1]
+        common = common.rstrip("_-")
+        if not common:
+            common = f"runs_{len(names)}"
+        stem = f"{common}__n{len(names)}"
+    safe_stem = re.sub(r"[^A-Za-z0-9_.-]+", "_", stem)
+    return parent / f"latent_ablation_combined__{safe_stem}.json"
+
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -388,8 +413,8 @@ def main(argv=None) -> None:
     _print_table(all_results)
     _print_interpretation(all_results)
 
-    # Combined output next to the first run_dir's parent
-    out_path = Path(args.run_dirs[0]).parent / "latent_ablation_combined.json"
+    # Save a deterministic combined filename keyed by the analysed run names.
+    out_path = _combined_output_path(args.run_dirs)
     out_path.write_text(
         json.dumps(all_results, indent=2, default=float), encoding="utf-8"
     )

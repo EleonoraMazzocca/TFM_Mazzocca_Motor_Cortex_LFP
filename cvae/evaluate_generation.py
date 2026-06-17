@@ -274,6 +274,7 @@ def main(argv=None) -> dict:
     print("\n── Section 1B: Latent Gaussianity ────────────────────────────────────────────")
     cvae_model.eval()
     mu_list = []
+    lv_list = []
     bs = 256
     for i in range(0, len(seen_norm), bs):
         x_b  = torch.tensor(seen_norm[i:i+bs], dtype=torch.float32).to(device)
@@ -286,18 +287,23 @@ def main(argv=None) -> dict:
             dtype=torch.float32,
         ).to(device)
         with torch.no_grad():
-            mu_b, _ = cvae_model.encode(x_b, c_b)
+            mu_b, lv_b = cvae_model.encode(x_b, c_b)
         mu_list.append(mu_b.cpu().numpy())
+        lv_list.append(lv_b.cpu().numpy())
     mu_all = np.concatenate(mu_list, axis=0)
+    lv_all = np.concatenate(lv_list, axis=0)
+    sigma_all = np.exp(0.5 * lv_all)
 
     latent_mean = float(mu_all.mean())
     latent_std  = float(mu_all.std())
+    posterior_std_mean = float(sigma_all.mean())
     ks_pct_latent = float(
         np.mean([kstest(mu_all[:, j], "norm").pvalue > 0.05 for j in range(mu_all.shape[1])])
     )
     print(f"\nLatent space Gaussianity (seen test embeddings — indicative only):")
     print(f"  Mean across dims:       {latent_mean:.4f}  (target 0.0)")
     print(f"  Std  across dims:       {latent_std:.4f}   (target 1.0)")
+    print(f"  Posterior std mean:     {posterior_std_mean:.4f}  (target ~1.0)")
     print(f"  % dims p>0.05 (KS):    {ks_pct_latent*100:.1f}%  (higher = better regularized)")
 
     # ── Section 2C: Compositionality test ─────────────────────────────────────
@@ -417,7 +423,7 @@ def main(argv=None) -> dict:
         _make_plots(
             args, out_dir, pca_full, ev,
             seen_norm, seen, held_norm, held,
-            x_gen_norm, mu_all, ks_pvalues,
+            x_gen_norm, mu_all, sigma_all, ks_pvalues,
             seen_centroids, held_centroid, gen_centroid, seen_cents,
             dists_held_to_seen, seen_keys, centroid_dist_gen_target,
             analogy_pred, phase_pred,
@@ -434,6 +440,7 @@ def main(argv=None) -> dict:
             "pca_variance_pc1_pc2_pc3":    pca_pc1pc2pc3,
             "latent_mean_across_dims":     latent_mean,
             "latent_std_across_dims":      latent_std,
+            "posterior_std_mean":          posterior_std_mean,
             "latent_gaussian_pct_dims_ks": ks_pct_latent,
             "note": "latent gaussianity computed on seen test set, not training set",
         },
@@ -479,6 +486,7 @@ def main(argv=None) -> dict:
     print(f"\nEmbedding space:")
     print(f"  PCA PC1+PC2 variance:          {pca_pc1pc2:.3f}")
     print(f"  Latent Gaussianity (test set): {ks_pct_latent*100:.1f}% dims non-rejected (KS)")
+    print(f"  Posterior std mean:            {posterior_std_mean:.3f}")
     print(f"\nGeometric quality:")
     print(f"  Centroid distance ratio:       {centroid_dist_ratio:.3f}  (< 1.0 = correct region)")
     if not np.isnan(compositionality_score):
@@ -506,7 +514,7 @@ def main(argv=None) -> dict:
 def _make_plots(
     args, out_dir, pca_full, ev,
     seen_norm, seen, held_norm, held,
-    x_gen_norm, mu_all, ks_pvalues,
+    x_gen_norm, mu_all, sigma_all, ks_pvalues,
     seen_centroids, held_centroid, gen_centroid, seen_cents,
     dists_held_to_seen, seen_keys, centroid_dist_gen_target,
     analogy_pred, phase_pred,
@@ -552,7 +560,7 @@ def _make_plots(
         axes[0].set_xlabel("Per-dim posterior mean")
         axes[0].set_ylabel("Count")
         axes[0].set_title("Aggregate posterior means (target: 0)")
-        axes[1].hist(np.exp(0.5 * np.zeros_like(mu_all)).mean(axis=0),
+        axes[1].hist(sigma_all.mean(axis=0),
                      bins=20, color=C_ORA, edgecolor="white")
         axes[1].set_xlabel("Per-dim posterior std")
         axes[1].set_title("Aggregate posterior stds (target: 1)")
