@@ -544,6 +544,86 @@ python -m cvae.run_embedding_cvae \
   --out_dir outputs/broadband6/cvae_grasp_precision_right
 ```
 
+### One-command active pipeline
+
+For the current active workflow, the repository also provides:
+
+```text
+scripts/run_active_pipeline.sh
+```
+
+This wrapper runs the main stages in order:
+
+```text
+linear baseline
+-> joint transformer
+-> cVAE
+-> optional standalone cVAE evaluation
+-> optional latent ablation
+```
+
+Default run:
+
+```bash
+bash scripts/run_active_pipeline.sh
+```
+
+This defaults to:
+
+- `input_mode=broadband6`
+- held-out `grasp + precision + right`
+- one-hot conditioning
+- `outputs/broadband6/...`
+
+The script also writes a run summary with the key artifact paths, for example:
+
+```text
+outputs/broadband6/run_summary_grasp_precision_right.txt
+```
+
+That summary records the output directories and main files such as:
+
+- linear baseline output directory
+- transformer output directory and `checkpoint.pt`
+- cVAE output directory and `checkpoint.pt`
+- seen and held-out embedding files
+- cVAE normalization statistics
+
+To include the standalone evaluation and latent ablation:
+
+```bash
+bash scripts/run_active_pipeline.sh --with_eval --with_ablation
+```
+
+If you want sentence conditioning, first generate the selected Option D condition table:
+
+```bash
+python -m cvae.condition_label.evaluate_condition_sentences \
+  --out_dir outputs/sentence_eval
+```
+
+This writes:
+
+```text
+outputs/sentence_eval/condition_vectors_D_pca5.npy
+outputs/sentence_eval/condition_keys_D_pca5.npy
+```
+
+Then run the full sentence-conditioned broadband6 pipeline:
+
+```bash
+bash scripts/run_active_pipeline.sh \
+  --input_mode broadband6 \
+  --heldout_phase grasp \
+  --heldout_grip precision \
+  --heldout_hand right \
+  --condition_type sentence \
+  --sentence_condition_path outputs/sentence_eval/condition_vectors_D_pca5.npy \
+  --sentence_key_order_path outputs/sentence_eval/condition_keys_D_pca5.npy \
+  --with_eval \
+  --with_ablation
+```
+
 cVAE default hyperparameters in practice:
 
 - `batch_size=128`: larger than the transformer because the cVAE sees pooled embeddings and uses only MLPs, so it is cheaper per sample.
