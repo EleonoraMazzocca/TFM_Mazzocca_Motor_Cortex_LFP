@@ -578,7 +578,7 @@ This defaults to:
 The script also writes a run summary with the key artifact paths, for example:
 
 ```text
-outputs/broadband6/run_summary_grasp_precision_right.txt
+outputs/broadband6/run_summary_grasp_precision_right_onehot.txt
 ```
 
 That summary records the output directories and main files such as:
@@ -595,6 +595,12 @@ To include the standalone evaluation and latent ablation:
 bash scripts/run_active_pipeline.sh --with_eval --with_ablation
 ```
 
+To run both cVAE loss variants, add:
+
+```bash
+bash scripts/run_active_pipeline.sh --with_mmd
+```
+
 If you want sentence conditioning, first generate the selected Option D condition table:
 
 ```bash
@@ -609,7 +615,7 @@ outputs/sentence_eval/condition_vectors_D_pca5.npy
 outputs/sentence_eval/condition_keys_D_pca5.npy
 ```
 
-Then run the full sentence-conditioned broadband6 pipeline:
+Then run the full sentence-conditioned broadband6 pipeline with both ELBO and MMD:
 
 ```bash
 bash scripts/run_active_pipeline.sh \
@@ -620,6 +626,7 @@ bash scripts/run_active_pipeline.sh \
   --condition_type sentence \
   --sentence_condition_path outputs/sentence_eval/condition_vectors_D_pca5.npy \
   --sentence_key_order_path outputs/sentence_eval/condition_keys_D_pca5.npy \
+  --with_mmd \
   --with_eval \
   --with_ablation
 ```
