@@ -35,6 +35,7 @@ from sklearn.decomposition import PCA
 _HERE = Path(__file__).resolve().parent
 from transformer_encoder.joint_embedding_data import PHASE_NAMES, GRIP_TO_ID, HAND_TO_ID  # noqa: E402
 from cvae.conditioning.onehot import CONDITION_DIM, make_condition_vector  # noqa: E402
+from cvae.conditioning.sentence import lookup_condition  # noqa: E402
 from cvae.cvae_model import LFPCVAE  # noqa: E402
 from transformer_encoder.joint_embedding_model import JointFactorTransformer  # noqa: E402
 from transformer_encoder.joint_embedding_data import BAND_NAMES_6  # noqa: E402
@@ -110,7 +111,9 @@ def load_transformer(args, device):
 def load_cvae(args, device) -> tuple:
     """Load cVAE checkpoint.
 
-    Returns (model, latent_dim, pca_data).
+    Returns (model, latent_dim, pca_data, saved_args).
+    saved_args is the dict stored in the checkpoint under "args"; callers use it
+    to reconstruct the condition type and sentence table paths.
     pca_data is None unless the checkpoint was trained with --pca_components > 0,
     in which case it is a dict with keys 'components' (n_comp × emb_dim) and 'mean' (emb_dim,).
     """
@@ -126,17 +129,20 @@ def load_cvae(args, device) -> tuple:
         print(f"  WARNING: checkpoint missing pca_data (saved before final write). "
               f"Reconstructing PCA({pca_n}) from seen embeddings.")
 
+    # Read condition_dim from checkpoint; fall back to 7 (one-hot) for old runs.
+    condition_dim = saved.get("condition_dim", CONDITION_DIM)
+
     input_dim = pca_n if pca_n > 0 else 64
     model = LFPCVAE(
         input_dim=input_dim,
-        condition_dim=CONDITION_DIM,
+        condition_dim=condition_dim,
         latent_dim=latent_dim,
         hidden_dims=hidden_dims,
         dropout=dropout,
     ).to(device)
     model.load_state_dict(ckpt["model_state"])
     model.eval()
-    return model, latent_dim, pca_data
+    return model, latent_dim, pca_data, saved
 
 
 # ---------------------------------------------------------------------------
@@ -217,18 +223,31 @@ def main(argv=None) -> dict:
     heldout_hand_id   = HAND_TO_ID[args.heldout_hand]
 
     # ── Load models ──────────────────────────────────────────────────────────
-    transformer_model            = load_transformer(args, device)
-    cvae_model, latent_dim, pca_data = load_cvae(args, device)
+    transformer_model                        = load_transformer(args, device)
+    cvae_model, latent_dim, pca_data, saved_cvae_args = load_cvae(args, device)
+
+    # Build condition helpers that match what the cVAE was trained with.
+    condition_type = saved_cvae_args.get("condition_type", "onehot")
+    if condition_type == "sentence":
+        _cond_table    = np.load(saved_cvae_args["sentence_condition_path"])
+        _cond_key_order = np.load(saved_cvae_args["sentence_key_order_path"])
+        def _make_cond(ph, gr, ha):
+            return lookup_condition(ph, gr, ha, _cond_table, _cond_key_order)
+    else:
+        _cond_table = _cond_key_order = None
+        def _make_cond(ph, gr, ha):
+            return make_condition_vector(ph, gr, ha)
 
     print(f"\n{'='*80}")
     print(f"  GENERATION EVALUATION")
     print(f"  Held-out: {args.heldout_phase}+{args.heldout_grip}+{args.heldout_hand}"
           f"  |  n_generate={args.n_generate}")
+    print(f"  Condition type: {condition_type}")
     print(f"  Device:   {device}  |  Output: {out_dir}")
     print(f"{'='*80}")
 
     # ── Generate samples ─────────────────────────────────────────────────────
-    cond     = make_condition_vector(heldout_phase_idx, heldout_grip_id, heldout_hand_id)
+    cond     = _make_cond(heldout_phase_idx, heldout_grip_id, heldout_hand_id)
     c_tensor = torch.tensor(cond, dtype=torch.float32)
     gen_rng  = torch.Generator(device=device).manual_seed(args.seed)
     with torch.no_grad():
@@ -282,7 +301,7 @@ def main(argv=None) -> dict:
         gr_b = seen["y_grip"][i:i+bs]
         ha_b = seen["y_hand"][i:i+bs]
         c_b  = torch.tensor(
-            np.stack([make_condition_vector(int(p), int(g), int(h))
+            np.stack([_make_cond(int(p), int(g), int(h))
                       for p, g, h in zip(ph_b, gr_b, ha_b)]),
             dtype=torch.float32,
         ).to(device)
