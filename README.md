@@ -13,8 +13,7 @@ transformer_encoder/          Joint phase/grip/hand transformer encoder and cond
 cvae/                         Conditional VAE and MMD-cVAE generation experiments
 configs/                      Condition-sentence configuration JSON files
 docs/                         Original notes and migrated README material
-scripts/                      Miscellaneous helper and verification scripts
-archive/                      Legacy/exploratory code kept for reference
+scripts/                      Primary end-to-end pipeline runner
 ```
 
 Generated outputs are intentionally excluded from the repository: raw data, cleaned arrays, model checkpoints, logs, plots, PDFs, `.npy`, `.npz`, and `.pt` files.
@@ -341,72 +340,82 @@ outputs/.../normalization_stats.npz
 
 The reported splits are `seen_test` for combinations available during training and `heldout_test` for the held-out phase/grip/hand combination.
 
-### Archived linear baselines
+## Condition-Sentence Search
 
-The previous broad task-suite and grip/hand/angle compositional baselines are preserved in `archive/legacy_linear_classifier/`:
+Sentence conditioning represents each of the 12 phase/grip/hand combinations
+with a low-dimensional sentence embedding. The search utilities do not train a
+cVAE; they only compare candidate condition sentences and export the selected
+condition table as NumPy arrays.
 
-```text
-archive/legacy_linear_classifier/data_classification.py
-archive/legacy_linear_classifier/run_classifier2_compositional.py
-```
+### Fixed thesis condition set
 
-They are useful historical references, but they are no longer the active baseline for comparing against the current `phase`, `grip`, `hand` transformer.
-
-### `archive/diagnostics/leakage_verification_tool.py`
-
-Purpose: static audit tool for possible train/test leakage risks.
-
-Intuition: it reads pipeline scripts as text and checks for patterns that could make results optimistic, such as splitting after data have already been pooled in a way that may mix sessions or related trials.
-
-Status in this project:
-
-- Diagnostic only; it does not create data for the model.
-- You likely did not use it as part of the main experiment. It was added as a sanity-check/reporting helper when we were worried about leakage in the older baseline pipeline.
-
-Example:
+`evaluate_condition_sentences.py` compares the built-in sentence strategies
+and exports the selected instructional Option D as a five-dimensional PCA
+table:
 
 ```bash
-python archive/diagnostics/leakage_verification_tool.py \
-  --classification archive/legacy_linear_classifier/data_classification.py \
-  --standardization preprocess_pipeline/data_standardization.py \
-  --preprocess preprocess_pipeline/data_preprocess.py \
-  --extra-scripts archive/diagnostics/build_session_aware_structured_split.py \
-  --output outputs/leakage_verification_report.txt
+python -m cvae.condition_label.evaluate_condition_sentences \
+  --out_dir outputs/sentence_eval
 ```
 
-Output:
+Main outputs:
 
 ```text
-outputs/leakage_verification_report.txt
+outputs/sentence_eval/condition_vectors_D_pca5.npy
+outputs/sentence_eval/condition_keys_D_pca5.npy
 ```
 
-If `--output` is omitted, the report is printed to the terminal only.
+These are the files used by the active pipeline's `--condition_type sentence`
+mode.
 
-### `archive/diagnostics/build_session_aware_structured_split.py`
+### Search generated templates
 
-Purpose: creates a JSON manifest for a session-aware/compositional split from the structured session files.
-
-Intuition: instead of immediately pooling everything into class files, this script records which session and trial each example came from, then creates train/validation/test entries according to a holdout rule. This is useful when you want stricter split control and want to avoid accidental mixing across sessions or conditions.
-
-Status in this project:
-
-- It is a helper for stricter future experiments.
-- It does not appear to be the split actually used by the current `transformer_encoder/run_joint_embedding.py`, which builds its own split after loading separated class files and applying `phase_expand()`.
-- It has been moved to `archive/diagnostics/` to avoid confusing it with the active preprocessing path. Keep it for reproducibility/future cleanup, but do not describe it as part of the main transformer/cVAE run unless you explicitly use it.
-
-Run:
+`search_condition_sentences.py` builds combinations from the phase, grip, hand,
+and sentence templates defined in the script. It embeds each 12-sentence set,
+tests PCA dimensions, scores factor recoverability and held-out behavior, and
+exports the highest-ranked table:
 
 ```bash
-python archive/diagnostics/build_session_aware_structured_split.py
+python -m cvae.condition_label.search_condition_sentences \
+  --out_dir outputs/sentence_search \
+  --dims 2 3 4 5 \
+  --top_k 20
 ```
 
-Default output:
+Main outputs include:
 
 ```text
-outputs/session_aware_structured_split.json
+outputs/sentence_search/sentence_search_top.json
+outputs/sentence_search/best_sentences.txt
+outputs/sentence_search/condition_vectors_best_pca<D>.npy
+outputs/sentence_search/condition_keys_best_pca<D>.npy
 ```
 
-The JSON contains entries for train/validation/test splits. Each entry records the session, trial index, class name, angles, paths to the structured data and metadata, and available phases.
+### Score the JSON candidate sets
+
+The files in `configs/` are optional, manually curated candidate collections.
+They are not loaded automatically by `run_active_pipeline.sh`. Score one with:
+
+```bash
+python -m cvae.condition_label.score_candidates \
+  configs/conditions_parallel.json \
+  --cross \
+  --out_dir outputs/sentence_candidates/parallel
+```
+
+The same command can be used with:
+
+```text
+configs/conditions_codex_targeted.json
+configs/conditions_dominance_targeted.json
+```
+
+`--cross` evaluates both MiniLM and MPNet; omit it for MiniLM only. The command
+ranks candidates across PCA dimensions and saves the best sentence set, key
+order, and condition-vector table in the requested output directory. To use a
+selected table in training, pass the exported vector and key-order `.npy` files
+to `run_active_pipeline.sh` through `--sentence_condition_path` and
+`--sentence_key_order_path`.
 
 ## Transformer Encoder
 
