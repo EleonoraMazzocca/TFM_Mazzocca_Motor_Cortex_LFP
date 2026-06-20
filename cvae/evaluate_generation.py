@@ -530,6 +530,106 @@ def main(argv=None) -> dict:
 # Plots
 # ---------------------------------------------------------------------------
 
+def _make_annotated_compositionality_plot(
+    args, out_dir, pca2, seen_centroids, seen_cents, seen_keys,
+    held_centroid, gen_centroid, analogy_pred, phase_pred,
+    heldout_phase_idx, heldout_grip_id,
+    heldout_hand_id, c_blue, c_orange, plt,
+):
+    """Create the presentation-style centroid analogy/phase-transfer figure."""
+    if analogy_pred is None and phase_pred is None:
+        return
+    try:
+        fig = plt.figure(figsize=(15, 8))
+        grid = fig.add_gridspec(1, 2, width_ratios=[1.65, 1.0], wspace=0.08)
+        ax = fig.add_subplot(grid[0, 0])
+        text_ax = fig.add_subplot(grid[0, 1])
+        text_ax.axis("off")
+
+        centroid_pc = pca2.transform(seen_cents)
+        held_pc = pca2.transform(held_centroid[None, :])[0]
+        gen_pc = pca2.transform(gen_centroid[None, :])[0]
+        ax.scatter(centroid_pc[:, 0], centroid_pc[:, 1], c="#999999", s=42, zorder=2)
+        for key, point in zip(seen_keys, centroid_pc):
+            label = f"{PHASE_NAMES[key[0]]}+{ID_TO_GRIP[key[1]]}+{ID_TO_HAND[key[2]]}"
+            ax.annotate(label, point, xytext=(0, 5), textcoords="offset points",
+                        fontsize=6, ha="center", color="#444444")
+        ax.scatter(*held_pc, c=c_blue, s=170, marker="*", zorder=6,
+                   label="real held-out centroid")
+        ax.scatter(*gen_pc, c=c_orange, s=125, marker="X", zorder=6,
+                   label="generated centroid")
+
+        if analogy_pred is not None:
+            analogy_pc = pca2.transform(analogy_pred[None, :])[0]
+            ax.scatter(*analogy_pc, c="#2ca02c", s=135, marker="D", zorder=7,
+                       label="analogical prediction")
+            start = seen_centroids[(heldout_phase_idx, heldout_grip_id, 1 - heldout_hand_id)]
+            ax.annotate("", xy=analogy_pc, xytext=pca2.transform(start[None, :])[0],
+                        arrowprops=dict(arrowstyle="->", color="#55b85a", lw=1.5))
+
+        previous_phase = (heldout_phase_idx - 1) % len(PHASE_NAMES)
+        if phase_pred is not None:
+            phase_pc = pca2.transform(phase_pred[None, :])[0]
+            ax.scatter(*phase_pc, c="#9467bd", s=145, marker="D", zorder=7,
+                       label="phase-transfer prediction")
+            start = seen_centroids[(previous_phase, heldout_grip_id, heldout_hand_id)]
+            ax.annotate("", xy=phase_pc, xytext=pca2.transform(start[None, :])[0],
+                        arrowprops=dict(arrowstyle="->", color="#9467bd", lw=1.5))
+
+        heldout = f"{args.heldout_phase}+{args.heldout_grip}+{args.heldout_hand}"
+        explained = pca2.explained_variance_ratio_[:2].sum() * 100
+        ax.set_title(f"Compositionality: {heldout}", fontsize=11)
+        ax.set_xlabel(f"PC1\nPC1+PC2: {explained:.1f}% variance")
+        ax.set_ylabel("PC2")
+        ax.legend(loc="lower left", fontsize=8)
+
+        alt_grip = ID_TO_GRIP[1 - heldout_grip_id]
+        alt_hand = ID_TO_HAND[1 - heldout_hand_id]
+        previous_name = PHASE_NAMES[previous_phase]
+        real_error = np.linalg.norm(held_centroid - analogy_pred) if analogy_pred is not None else np.nan
+        gen_error = np.linalg.norm(gen_centroid - analogy_pred) if analogy_pred is not None else np.nan
+        compositionality_score = gen_error / real_error if real_error > 0 else np.nan
+        good = not np.isnan(compositionality_score) and compositionality_score <= 1.0
+        result = "GOOD" if good else "WEAK"
+        result_color = "#20d52b" if good else "#f2a51a"
+
+        text_ax.text(0, 0.98, "Analogical prediction (green diamond)",
+                     fontsize=11, fontweight="bold", va="top")
+        text_ax.text(0, 0.91, "Apply the grip/hand direction learned from the other trials:",
+                     fontsize=10, va="top")
+        text_ax.text(
+            0.02, 0.82,
+            f"centroid({args.heldout_phase}, {args.heldout_grip}, {alt_hand})\n"
+            f"+ centroid({args.heldout_phase}, {alt_grip}, {args.heldout_hand})\n"
+            f"- centroid({args.heldout_phase}, {alt_grip}, {alt_hand})",
+            fontsize=10, family="monospace", va="top")
+        text_ax.text(0, 0.65, "Compositionality result:", fontsize=10, va="top")
+        text_ax.text(0.38, 0.65, result, fontsize=11, fontweight="bold", va="top",
+                     bbox=dict(facecolor=result_color, edgecolor="none", pad=1.5))
+
+        text_ax.text(0, 0.45, "Phase-transfer prediction (purple diamond)",
+                     fontsize=11, fontweight="bold", va="top")
+        text_ax.text(0, 0.38, f"Transfer the {previous_name}->{args.heldout_phase} direction:",
+                     fontsize=10, va="top")
+        text_ax.text(
+            0.02, 0.29,
+            f"centroid({previous_name}, {args.heldout_grip}, {args.heldout_hand})\n"
+            f"+ centroid({args.heldout_phase}, {alt_grip}, {args.heldout_hand})\n"
+            f"- centroid({previous_name}, {alt_grip}, {args.heldout_hand})",
+            fontsize=10, family="monospace", va="top")
+        text_ax.text(0.98, 0.02, f"held out: {heldout}", fontsize=10,
+                     fontweight="bold", ha="right", va="bottom",
+                     bbox=dict(facecolor="#ffb000", edgecolor="black", pad=2))
+
+        fig.suptitle("Analogical and phase-transfer predictions in the PCA centroid plot",
+                     fontsize=16, fontweight="bold", x=0.02, ha="left")
+        plt.savefig(out_dir / "analogical_phase_transfer_predictions_pca.png",
+                    dpi=150, bbox_inches="tight")
+        plt.close(fig)
+        print("  Saved analogical_phase_transfer_predictions_pca.png")
+    except Exception as e:
+        print(f"  WARNING: annotated analogy/phase-transfer plot failed: {e}")
+
 def _make_plots(
     args, out_dir, pca_full, ev,
     seen_norm, seen, held_norm, held,
@@ -722,6 +822,7 @@ def _make_plots(
     except Exception as e:
         print(f"  WARNING: compositional_prediction plot failed: {e}")
 
+    _make_annotated_compositionality_plot(args, out_dir, pca2, seen_centroids, seen_cents, seen_keys, held_centroid, gen_centroid, analogy_pred, phase_pred, heldout_phase_idx, heldout_grip_id, heldout_hand_id, C_BLUE, C_ORA, plt)
     # ── Target centroid distances bar chart ──────────────────────────────────
     try:
         dists_gen_to_seen = np.linalg.norm(seen_cents - gen_centroid[None, :], axis=1)
