@@ -1,10 +1,11 @@
 """Evaluate sentence-encoding strategies for cVAE condition labels.
 
 Encodes 12 condition sentences under five options (A/B/C/D/E) using MiniLM and
-scores each on three criteria:
+scores each on four criteria:
   1. Factor coherence  — within-factor similarity vs cross-factor similarity
   2. Phase gradient    — adjacent phases more similar than distant phases
   3. Held-out proximity — held-out class sits close to its seen neighbours
+  4. Linear recoverability — descriptive in-sample identification after PCA
 
 No CVAE, no data, no imports from the rest of the codebase.
 
@@ -125,6 +126,10 @@ HANDS  = [0, 1, 0, 1,  0, 1, 0, 1,  0, 1, 0, 1]   # 0=left,1=right
 PHASE_NAMES = ["prereach", "reach", "grasp"]
 GRIP_NAMES  = ["power", "precision"]
 HAND_NAMES  = ["left", "right"]
+CONDITION_NAMES = [
+    f"{PHASE_NAMES[PHASES[i]]}+{GRIP_NAMES[GRIPS[i]]}+{HAND_NAMES[HANDS[i]]}"
+    for i in range(12)
+]
 
 # Held-out: grasp + precision + right → index 11
 # Neighbours: grasp+precision+left (10), grasp+power+right (9)
@@ -198,6 +203,52 @@ def pca_dims(embeddings: np.ndarray, thresholds: tuple[float, ...] = (0.95, 0.99
     return result
 
 
+def linear_recoverability(
+    embeddings: np.ndarray,
+    dimensions: range = range(2, 8),
+) -> dict[str, dict]:
+    """Measure descriptive 12-condition linear recoverability after PCA.
+
+    The classifier is fitted and evaluated on the same 12 condition vectors.
+    This is deliberately a representation diagnostic, not a cross-validated
+    estimate of generalization performance.
+    """
+    from sklearn.decomposition import PCA
+    from sklearn.linear_model import LogisticRegression
+
+    labels = np.arange(len(CONDITION_NAMES), dtype=np.int64)
+    max_dim = min(embeddings.shape[0] - 1, embeddings.shape[1])
+    records = {}
+    for dim in dimensions:
+        if dim > max_dim:
+            continue
+        projected = PCA(n_components=dim, random_state=42).fit_transform(embeddings)
+        classifier = LogisticRegression(
+            max_iter=10000,
+            solver="lbfgs",
+            random_state=42,
+        )
+        classifier.fit(projected, labels)
+        predictions = classifier.predict(projected).astype(np.int64)
+        errors = [
+            {
+                "index": int(i),
+                "true": CONDITION_NAMES[i],
+                "predicted": CONDITION_NAMES[int(predictions[i])],
+            }
+            for i in range(len(labels))
+            if predictions[i] != labels[i]
+        ]
+        records[str(dim)] = {
+            "n_correct": int((predictions == labels).sum()),
+            "n_total": int(len(labels)),
+            "accuracy": float((predictions == labels).mean()),
+            "fully_recoverable": bool(np.all(predictions == labels)),
+            "errors": errors,
+        }
+    return records
+
+
 # ---------------------------------------------------------------------------
 # Heatmap
 # ---------------------------------------------------------------------------
@@ -266,6 +317,7 @@ def main(argv=None) -> None:
     lm = SentenceTransformer(args.model)
 
     results = {}
+    recoverability_results = {}
     for opt_name, sentences in OPTIONS.items():
         print(f"\nEncoding option {opt_name} ...")
         emb = lm.encode(sentences, normalize_embeddings=True, show_progress_bar=False)
@@ -294,6 +346,7 @@ def main(argv=None) -> None:
         sim_n1, sim_n2, sim_d = heldout_proximity(sim)
 
         pca_d = pca_dims(emb)
+        recoverability_results[opt_name] = linear_recoverability(emb)
 
         results[opt_name] = {
             "phase_in": ph_in,  "phase_out": ph_out,
@@ -329,6 +382,22 @@ def main(argv=None) -> None:
               f"{r['pca_dims_95']:>7d} {r['pca_dims_99']:>7d}")
     print("=" * W)
 
+    print("\n12-condition linear recoverability (fit and evaluated on the same 12 vectors):")
+    for opt_name, records in recoverability_results.items():
+        intrinsic_dim = results[opt_name]["pca_dims_99"]
+        print(f"\n{opt_name}  (pca@99 = {intrinsic_dim} dims)")
+        for dim, record in records.items():
+            marker = " ← pca@99" if int(dim) == intrinsic_dim else ""
+            status = "SEPARABLE" if record["fully_recoverable"] else "not fully separable"
+            print(
+                f"  {dim} dims: training accuracy={record['accuracy']:.4f}  {status}{marker}"
+            )
+        intrinsic_record = records.get(str(intrinsic_dim))
+        if intrinsic_record and intrinsic_record["errors"]:
+            print("  Confusions at pca@99:")
+            for error in intrinsic_record["errors"]:
+                print(f"    true: {error['true']:<36} predicted: {error['predicted']}")
+
     # --- Interpretation ---
     print("\nColumn guide:")
     print("  ph/gr/ha gap : within-factor − cross-factor similarity (positive = good, >0.15 is meaningful)")
@@ -359,6 +428,12 @@ def main(argv=None) -> None:
     import json
     (out_dir / "sentence_eval_summary.json").write_text(
         json.dumps(results, indent=2), encoding="utf-8"
+    )
+    (out_dir / "condition_linear_recoverability.json").write_text(
+        json.dumps(recoverability_results, indent=2), encoding="utf-8"
+    )
+    print(
+        f"Saved linear-recoverability records to {out_dir / 'condition_linear_recoverability.json'}"
     )
     print(f"\nSaved matrices, heatmaps, and summary to {out_dir}")
 

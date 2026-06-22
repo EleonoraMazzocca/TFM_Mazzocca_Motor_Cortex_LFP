@@ -144,6 +144,16 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="Skip retrain permutation baselines.",
     )
+    p.add_argument(
+        "--permutation_only",
+        action="store_true",
+        help=(
+            "Run only shuffled-label permutation baselines for an existing run. "
+            "Loads the original configuration and normalization from checkpoint.pt, "
+            "reads observed accuracies from summary.json, and updates only the "
+            "permutation fields/plots without retraining or overwriting the main model."
+        ),
+    )
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--device", choices=["auto", "cuda", "cpu"], default="auto")
     p.add_argument("--no_plot", action="store_true")
@@ -972,6 +982,46 @@ def save_checkpoint(
 
 def main(argv: list[str] | None = None) -> None:
     args = parse_args(argv)
+    out_dir = Path(args.out_dir)
+    checkpoint_payload = None
+    if args.permutation_only:
+        if args.skip_permutation:
+            raise SystemExit("--permutation_only cannot be combined with --skip_permutation.")
+        checkpoint_path = out_dir / "checkpoint.pt"
+        summary_path = out_dir / "summary.json"
+        missing = [str(path) for path in (checkpoint_path, summary_path) if not path.exists()]
+        if missing:
+            raise SystemExit(
+                "--permutation_only requires an existing checkpoint and summary.\n"
+                + "\n".join(f"  missing: {path}" for path in missing)
+            )
+        checkpoint_payload = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
+        saved_config = checkpoint_payload.get("config")
+        if not isinstance(saved_config, dict):
+            raise SystemExit(f"Checkpoint has no usable config: {checkpoint_path}")
+
+        # Reconstruct the original split and model/training configuration while
+        # retaining only the controls for this new permutation run.
+        runtime_controls = {
+            "data_dir": args.data_dir,
+            "cache_dir": args.cache_dir,
+            "out_dir": str(out_dir),
+            "n_permutations": args.n_permutations,
+            "permutation_epochs": args.permutation_epochs,
+            "permutation_patience": args.permutation_patience,
+            "full_permutation_training": args.full_permutation_training,
+            "device": args.device,
+            "no_plot": args.no_plot,
+            "dry_run": args.dry_run,
+            "permutation_only": True,
+            "skip_permutation": False,
+        }
+        for key, value in saved_config.items():
+            if hasattr(args, key):
+                setattr(args, key, value)
+        for key, value in runtime_controls.items():
+            setattr(args, key, value)
+
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
     if args.dry_run:
@@ -983,9 +1033,11 @@ def main(argv: list[str] | None = None) -> None:
         "cuda" if args.device == "auto" and torch.cuda.is_available() else
         "cpu" if args.device == "auto" else args.device
     )
-    out_dir = Path(args.out_dir)
     validate_output_dir(args, out_dir)
-    out_dir.mkdir(parents=True, exist_ok=True)
+    if args.permutation_only:
+        print(f"Permutation-only mode: preserving existing model outputs in {out_dir}")
+    else:
+        out_dir.mkdir(parents=True, exist_ok=True)
 
     # 1. Build the sample table.
     # load_joint_trials() indexes class files at trial level; phase_expand()
@@ -1021,7 +1073,14 @@ def main(argv: list[str] | None = None) -> None:
     )
 
     # 4. Normalize using training samples only, then create PyTorch datasets.
-    stats = compute_norm_stats(features, train_idx)
+    if args.permutation_only:
+        stats = checkpoint_payload.get("norm_stats")
+        if not isinstance(stats, dict):
+            raise SystemExit(
+                f"Checkpoint has no usable normalization statistics: {out_dir / "checkpoint.pt"}"
+            )
+    else:
+        stats = compute_norm_stats(features, train_idx)
     train_ds = JointEmbeddingDataset(features, flat, train_idx, stats)
     val_ds = JointEmbeddingDataset(features, flat, val_idx, stats)
     test_ds = JointEmbeddingDataset(features, flat, test_idx, stats)
@@ -1041,6 +1100,53 @@ def main(argv: list[str] | None = None) -> None:
         "feedforward_dim": args.feedforward_dim,
         "dropout": args.dropout,
     }
+    if args.permutation_only:
+        summary_path = out_dir / "summary.json"
+        summary = json.loads(summary_path.read_text(encoding="utf-8"))
+        observed_by_head = (summary.get("classification_accuracy") or {}).get("seen_test")
+        if not isinstance(observed_by_head, dict) or any(head not in observed_by_head for head in HEADS):
+            raise SystemExit(f"Summary has no complete seen-test accuracies: {summary_path}")
+
+        null_distributions = run_permutation_test(
+            train_ds, val_ds, test_ds, model_kwargs, args, device
+        )
+        p_values = {}
+        for head in HEADS:
+            observed = float(observed_by_head[head])
+            null = np.asarray(null_distributions[head], dtype=float)
+            p_values[head] = float((np.sum(null >= observed) + 1) / (len(null) + 1))
+            if not args.no_plot:
+                plot_permutation_test(
+                    observed, null_distributions[head], head, out_dir / f"permutation_{head}.png"
+                )
+
+        summary["p_values"] = p_values
+        summary["permutation_test"] = {
+            "n_permutations": args.n_permutations,
+            "epochs_per_permutation": (
+                args.epochs if args.full_permutation_training
+                else min(args.epochs, args.permutation_epochs)
+            ),
+            "patience_per_permutation": (
+                args.patience if args.full_permutation_training
+                else min(args.patience, args.permutation_patience)
+            ),
+            "null_distributions": null_distributions,
+            "note": (
+                "Each iteration retrains a fresh joint transformer with independently "
+                "permuted phase, grip, and hand labels."
+            ),
+        }
+        temporary_summary = summary_path.with_suffix(".json.tmp")
+        temporary_summary.write_text(json.dumps(summary, indent=2), encoding="utf-8")
+        temporary_summary.replace(summary_path)
+        print("\nPermutation-only results:")
+        print(json.dumps(
+            {"p_values": p_values, "permutation_test": summary["permutation_test"]},
+            indent=2,
+        ))
+        return
+
     model = JointFactorTransformer(
         n_bands=n_bands,
         d_model=args.d_model,

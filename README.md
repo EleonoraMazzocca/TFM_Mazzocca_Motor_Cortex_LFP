@@ -363,7 +363,13 @@ Main outputs:
 ```text
 outputs/sentence_eval/condition_vectors_D_pca5.npy
 outputs/sentence_eval/condition_keys_D_pca5.npy
+outputs/sentence_eval/condition_linear_recoverability.json
 ```
+
+The recoverability file records a descriptive multinomial logistic-regression
+test across PCA dimensions. The classifier is fitted and evaluated on the same
+12 condition vectors, so this measures whether the condition representation is
+trivially linearly recoverable; it is not a cross-validated accuracy estimate.
 
 These are the files used by the active pipeline's `--condition_type sentence`
 mode.
