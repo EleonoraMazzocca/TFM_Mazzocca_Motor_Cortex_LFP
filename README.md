@@ -1,6 +1,6 @@
 # TFM_Mazzocca_Motor_Cortex_LFP
 
-Compositional generalization in motor-cortex local field potentials (LFP): decoding and generating brain states for unseen movement combinations.
+Compositional generalization in motor-cortex local field potentials (LFP): decoding movement factors and generating transformer-embedding representations for unseen movement combinations.
 
 This repository is organized as a research pipeline rather than as the original nested preprocessing folder. The layout follows the Cookiecutter idea of a clean, reproducible project skeleton, but keeps the thesis workflow visible at the top level.
 
@@ -12,11 +12,10 @@ baseline_linear_classifier/   Classical logistic-regression baselines
 transformer_encoder/          Joint phase/grip/hand transformer encoder and condition-sentence utilities
 cvae/                         Conditional VAE and MMD-cVAE generation experiments
 configs/                      Condition-sentence configuration JSON files
-docs/                         Original notes and migrated README material
-scripts/                      Primary end-to-end pipeline runner
+scripts/                      Active end-to-end pipeline runner
 ```
 
-Generated outputs are intentionally excluded from the repository: raw data, cleaned arrays, model checkpoints, logs, plots, PDFs, `.npy`, `.npz`, and `.pt` files.
+Generated outputs and local notes are intentionally excluded from the repository: raw data, cleaned arrays, model checkpoints, logs, plots, PDFs, `.npy`, `.npz`, `.pt` files, and `docs/` drafts.
 
 ## Environment
 
@@ -463,16 +462,16 @@ Feature extraction supports:
 - `mu`: mean absolute amplitude per channel, arranged as `4 areas x 96 channel slots x 1 band`
 - `broadband6`: six band-amplitude features, arranged as `4 areas x 96 channel slots x 6 bands`
 
-Held-out experiments use a strict zero-shot split:
+Held-out experiments use a zero-shot combination split:
 
 ```text
 train:        seen phase/grip/hand combinations only
 validation:   seen phase/grip/hand combinations only
 seen_test:    seen phase/grip/hand combinations only
-heldout_test: all samples from the held-out phase/grip/hand combination
+heldout_test: all phase-level samples from the held-out phase/grip/hand combination
 ```
 
-Held-out samples are not used for early stopping, hyperparameter selection, or model selection. Summaries from new runs record this as `split_protocol: strict_zero_shot`.
+Held-out samples are not used for early stopping, hyperparameter selection, or model selection. In code summaries this is recorded as `split_protocol: strict_zero_shot`. Interpreted carefully, this means zero-shot with respect to the held-out phase x grip x hand label combination; it is not a leave-trial-out or leave-session-out protocol, because trials are expanded into phase-level samples before splitting.
 
 Example MU run:
 
@@ -593,14 +592,14 @@ This defaults to:
 The script also writes a run summary with the key artifact paths, for example:
 
 ```text
-outputs/broadband6/run_summary_grasp_precision_right_onehot.txt
+outputs/broadband6/grasp_precision_right/run_summary_onehot.txt
 ```
 
 That summary records the output directories and main files such as:
 
-- linear baseline output directory
-- transformer output directory and `checkpoint.pt`
-- cVAE output directory and `checkpoint.pt`
+- per-seed linear baseline output directories
+- per-seed transformer output directories and `checkpoint.pt` files
+- per-seed cVAE output directories and `checkpoint.pt` files
 - seen and held-out embedding files
 - cVAE normalization statistics
 
