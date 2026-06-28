@@ -17,3 +17,10 @@ outputs/
 results/
 __pycache__/
 *.pyc
+
+# Local documentation drafts
+docs/
+
+# Only keep the active pipeline runner under scripts
+scripts/*
+!scripts/run_active_pipeline.sh
